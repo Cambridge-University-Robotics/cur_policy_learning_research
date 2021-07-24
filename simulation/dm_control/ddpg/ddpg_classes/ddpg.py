@@ -1,13 +1,12 @@
 import torch.autograd
 import torch.optim as optim
 
-from model import *
-from utils import *
+from .model import *
+from .utils import *
 
 
 class DDPGagent:
-    def __init__(self, num_states, num_actions, hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2,
-                 max_memory_size=50000):
+    def __init__(self, num_states, num_actions, hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=50000, memory=MemorySeq):
         # Params
         self.num_states = num_states
         self.num_actions = num_actions
@@ -29,7 +28,7 @@ class DDPGagent:
             target_param.data.copy_(param.data)
 
         # Training
-        self.memory = Memory(max_memory_size)
+        self.memory = memory(max_memory_size)
         self.critic_criterion = nn.MSELoss()
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=actor_learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
