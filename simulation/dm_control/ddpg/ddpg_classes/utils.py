@@ -1,5 +1,4 @@
 import numpy as np
-import gym
 from collections import deque
 import random
 from abc import ABC, abstractmethod
@@ -36,24 +35,9 @@ class OUNoise(object):
         return np.clip(action + ou_state, self.low, self.high)
 
 
-# https://github.com/openai/gym/blob/master/gym/core.py
-class NormalizedEnv(gym.ActionWrapper):
-    """ Wrap action """
-
-    def action(self, action):
-        act_k = (self.action_space.high - self.action_space.low) / 2.
-        act_b = (self.action_space.high + self.action_space.low) / 2.
-        return act_k * action + act_b
-
-    def reverse_action(self, action):
-        act_k_inv = 2. / (self.action_space.high - self.action_space.low)
-        act_b = (self.action_space.high + self.action_space.low) / 2.
-        return act_k_inv * (action - act_b)
-
-
 class Memory(ABC):
     @abstractmethod
-    def push(self, state, action, reward, next_state, done):
+    def push(self, state, action, reward, next_state, done, *args, **kwargs):
         pass
 
     @abstractmethod
@@ -66,7 +50,7 @@ class MemorySeq(Memory):
         self.max_size = max_size
         self.buffer = deque(maxlen=max_size)
 
-    def push(self, state, action, reward, next_state, done):
+    def push(self, state, action, reward, next_state, done, *args, **kwargs):
         experience = (state, action, np.array([reward]), next_state, done)
         self.buffer.append(experience)
 
@@ -77,7 +61,9 @@ class MemorySeq(Memory):
         next_state_batch = []
         done_batch = []
 
-        batch = random.sample(self.buffer, batch_size)
+        # this line is the leading term for time complexity!!
+        batch = random.sample(self.buffer, min(len(self.buffer), batch_size))
+        # batch = random.sample(self.buffer, batch_size)
 
         for experience in batch:
             state, action, reward, next_state, done = experience
@@ -101,7 +87,8 @@ class MemoryRank(Memory):
         self.sort_ctr = sort_period
         self.weights = [1 / i for i in range(1, self.max_size + 1)]
 
-    def push(self, state, action, reward, next_state, done, priority=0):
+    def push(self, state, action, reward, next_state, done, *args, **kwargs):
+        priority = kwargs.get('priority', 0)
         experience = (state, action, np.array([reward]), next_state, done)
         self.buffer.append((priority, experience))
 

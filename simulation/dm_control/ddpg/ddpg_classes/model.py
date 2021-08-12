@@ -1,8 +1,7 @@
 import torch
+import torch.autograd
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.autograd
-from torch.autograd import Variable
 
 
 class Critic(nn.Module):
@@ -37,7 +36,6 @@ class Actor(nn.Module):
         """
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
-        # x = self.linear3(x)
         x = torch.tanh(self.linear3(x))
 
         return x

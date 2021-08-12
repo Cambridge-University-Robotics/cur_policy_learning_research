@@ -5,15 +5,48 @@ from .model import *
 from .utils import *
 
 
-class DDPGagent:
-    def __init__(self, num_states, num_actions, hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=50000, memory=MemorySeq):
+class Agent(ABC):
+    """
+    Usage:
+    1. initialise
+    2. get_action (inputs and outputs are normed and denormed)
+    3. push to add experience to memory (include arguments if necessary)
+    4. update to train model
+    """
+
+    @abstractmethod
+    def get_action(self, state, t):
+        pass
+
+    @abstractmethod
+    def push(self, state, action, reward, next_state, done, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def update(self, batch_size):
+        pass
+
+    @abstractmethod
+    def save(self, path_save):
+        pass
+
+    @abstractmethod
+    def load(self, path_load):
+        pass
+
+
+class DDPGagent(Agent):
+    def __init__(self, num_states, num_actions, action_low, action_high, hidden_size=256,
+                 actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2,
+                 max_memory_size=50000, memory=MemorySeq, noise=OUNoise):
         # Params
         self.num_states = num_states
         self.num_actions = num_actions
-        # self.num_states = env.observation_space.shape[0]
-        # self.num_actions = env.action_space.shape[0]
+        self.action_low = action_low
+        self.action_high = action_high
         self.gamma = gamma
         self.tau = tau
+        self.noise = noise(action_dim=num_actions, action_low=action_low, action_high=action_high)
 
         # Networks
         self.actor = Actor(self.num_states, hidden_size, self.num_actions)
@@ -33,10 +66,25 @@ class DDPGagent:
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=actor_learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
 
-    def get_action(self, state):
+    # use on env output before passing to model
+    def _norm(self, action):
+        act_k = (self.action_high - self.action_low) / 2.
+        act_b = (self.action_high + self.action_low) / 2.
+        return action * act_k + act_b
+
+    # use on model output before passing to env
+    def _denorm(self, action):
+        act_k_inv = 2. / (self.action_high - self.action_low)
+        act_b = (self.action_high + self.action_low) / 2.
+        return act_k_inv * (action - act_b)
+
+    def get_action(self, state, t):
         state = torch.from_numpy(state).float().unsqueeze(0)
         action = self.actor(state)
         action = action.detach().numpy()[0]
+        self.noise.reset() if t == 0 else None
+        action = self.noise.get_action(action, t)
+        action = self._denorm(action)
         return action
 
     def update(self, batch_size):
@@ -71,6 +119,10 @@ class DDPGagent:
 
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
             target_param.data.copy_(param.data * self.tau + target_param.data * (1.0 - self.tau))
+
+    def push(self, state, action, reward, next_state, done, *args, **kwargs):
+        action = self._norm(action)
+        self.memory.push(state, action, reward, next_state, done, *args, **kwargs)
 
     def save(self, path_save):
         torch.save(self.actor, f'{path_save}_actor.pt')
