@@ -6,6 +6,7 @@ import numpy as np
 import scipy.interpolate
 import utility
 
+
 class Trajectory(ABC):
     @abstractmethod
     def eval(self, t):
@@ -34,6 +35,7 @@ class Trajectory(ABC):
     def generate_trajectory(self, current_state):
         pass
 
+
 class SplineTrajectory(Trajectory):
     def __init__(self, states: List[np.ndarray] = []):
         self.states = states
@@ -51,11 +53,12 @@ class SplineTrajectory(Trajectory):
 
     def generate_trajectory(self, current_state):
         states = np.insert(self.states, 0, current_state, axis=0)
-        deg = min(len(states) - 1 , 3)
+        deg = min(len(states) - 1, 3)
         self.tck, self.u = scipy.interpolate.splprep(states.T, ub=0, ue=1, s=0, k=deg)
 
     def target_state(self):
         return self.states[-1]
+
 
 class LinearTrajectory(Trajectory):
     def __init__(self, states: List[np.ndarray] = []):
@@ -92,9 +95,10 @@ class LinearTrajectory(Trajectory):
     def target_state(self):
         return self.states[-1]
 
+
 class RobotController:
     def __init__(self):
-        self.trajectories = Queue() # type: Queue[Tuple[Trajectory, float]]
+        self.trajectories = Queue()  # type: Queue[Tuple[Trajectory, float]]
         self.start_time = 0
         self.current_trajectory = None
         self.target_time = None
@@ -109,7 +113,9 @@ class RobotController:
         t = 0
         if self.target_time is not None:
             t = (time - self.start_time) / self.target_time
-        if self.current_trajectory is None or (1 - t < 1e-2 and np.isclose(current_state, self.current_trajectory.target_state(), rtol=0.05, atol=1e-2).all()):
+        if self.current_trajectory is None or (
+                1 - t < 1e-2 and np.isclose(current_state, self.current_trajectory.target_state(), rtol=0.05,
+                                            atol=1e-2).all()):
             if self.trajectories.empty():
                 return self.current_trajectory.target_state()
             data = self.trajectories.get()
@@ -135,6 +141,21 @@ class RobotController:
         return action
 
 
+class RobotDeltaController(RobotController):
+    def __init__(self):
+        super()
+        self.last_target_state = None
 
+    def get_action(self, readings: utility.SensorsReading):
+        current_state = np.concatenate([readings.grip_pos, readings.grip_rot[1], readings.grip_rot[0]], axis=None)
+        target_state = self.get_target_state(readings.simulation_time, current_state)
 
-
+        if target_state is None:
+            return utility.to_action(np.zeros(3), readings.grip_rot[2], readings.grip_rot[0])
+        if self.last_target_state is None:
+            action = utility.to_action(target_state[:3] - readings.grip_pos, target_state[3], target_state[4])
+        else:
+            diff = target_state - self.last_target_state
+            action = utility.to_action(diff[:3], readings.grip_rot[2] + diff[3], readings.grip_rot[0] + diff[4])
+        self.last_target_state = target_state
+        return action
