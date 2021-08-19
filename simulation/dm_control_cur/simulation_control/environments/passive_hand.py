@@ -183,8 +183,8 @@ class Lift(control.Task):
         object_vel = physics.get_site_vel('object0', False)
         object_velp = object_vel[3:]
         object_velr = object_vel[:3]
-        # object_rel_pos = object_pos - grip_pos
-        # object_rel_velp = object_velp - grip_velp
+        object_rel_pos = object_pos - grip_pos
+        object_rel_velp = object_velp - grip_velp
 
         # contact_force = np.zeros(6)
         # n_geoms = physics.named.model.body_geomnum['object0']
@@ -205,10 +205,10 @@ class Lift(control.Task):
         obs['grip_velr'] = grip_velr
         obs['grip_rot'] = grip_rot
         obs['object_pos'] = object_pos
-        # obs['object_rel_pos'] = object_rel_pos
+        obs['object_rel_pos'] = object_rel_pos
         obs['object_velp'] = object_velp
         obs['object_velr'] = object_velr
-        # obs['object_rel_velp'] = object_rel_velp
+        obs['object_rel_velp'] = object_rel_velp
         obs['simulation_time'] = physics.data.time
         obs['object_contact_force'] = contact_force
 
