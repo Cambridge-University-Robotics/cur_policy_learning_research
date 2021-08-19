@@ -4,7 +4,8 @@ from typing import List
 
 import numpy as np
 import scipy.interpolate
-import utility
+from simulation.dm_control_cur.utility_classes import data_wrappers
+
 
 class Trajectory(ABC):
     @abstractmethod
@@ -46,7 +47,7 @@ class SplineTrajectory(Trajectory):
             self.states.append(np.concatenate([pos, vert_rot, twist_rot], axis=None))
 
     def eval(self, t):
-        t = utility.clamp(t, 0, 1)
+        t = data_wrappers.clamp(t, 0, 1)
         return scipy.interpolate.splev(t, self.tck)
 
     def generate_trajectory(self, current_state):
@@ -71,7 +72,7 @@ class LinearTrajectory(Trajectory):
             self.states.append(np.concatenate([pos, vert_rot, twist_rot], axis=None))
 
     def eval(self, t):
-        t = utility.clamp(t, 0, 1)
+        t = data_wrappers.clamp(t, 0, 1)
         index = np.where(t <= self.times)[0]
         if len(index) > 0:
             index = index[0]
@@ -124,13 +125,13 @@ class RobotController:
         # print('Condition Table:',  np.isclose(current_state, self.current_trajectory.target_state(), rtol=0.01, atol=5e-3))
         return res
 
-    def get_action(self, readings: utility.SensorsReading):
+    def get_action(self, readings: data_wrappers.SensorsReading):
         current_state = np.concatenate([readings.grip_pos, readings.grip_rot[1], readings.grip_rot[0]], axis=None)
         target_state = self.get_target_state(readings.simulation_time, current_state)
 
         if target_state is None:
-            return utility.to_action(np.zeros(3), readings.grip_rot[2], readings.grip_rot[0])
-        action = utility.to_action(target_state[:3] - readings.grip_pos, target_state[3], target_state[4])
+            return data_wrappers.to_action(np.zeros(3), readings.grip_rot[2], readings.grip_rot[0])
+        action = data_wrappers.to_action(target_state[:3] - readings.grip_pos, target_state[3], target_state[4])
         # print('Action:', action)
         return action
 

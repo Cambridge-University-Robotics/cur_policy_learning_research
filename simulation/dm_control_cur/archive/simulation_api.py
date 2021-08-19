@@ -1,10 +1,10 @@
 from inspect import signature
 from typing import Callable
 
-from simulation.dm_control.simulation_control import environments
-from simulation.dm_control.parameterizer import Parameterizer
-from simulation.dm_control.reward_functions import placeholder_reward_func
-from simulation.dm_control.utility import *
+from simulation.dm_control_cur.simulation_control import environments
+from simulation.dm_control_cur.utility_classes.parameterizer import Parameterizer
+from simulation.dm_control_cur.archive.reward_functions import placeholder_reward_func
+from simulation.dm_control_cur.utility_classes.data_wrappers import *
 
 
 class SimulationAPI:
@@ -42,11 +42,11 @@ class SimulationAPI:
         pm = Parameterizer()
         if randomize or (parameters is not None):
             if (randomize):
-                pm.randomize_object(self.object_randomization_multiplier)
-                pm.randomize_robot(self.hand_randomization_multiplier)
+                pm._randomize_object(self.object_randomization_multiplier)
+                pm._randomize_robot(self.hand_randomization_multiplier)
             if parameters is not None:
-                pm.set_all(parameters.to_dict())
-            pm.export_XML()
+                pm._set_all(parameters.to_dict())
+            pm._export_xml()
         para_dict = pm.get_parameters()
         self.environmental_parametrization = EnvironmentParametrization(para_dict)
         self.env = environments.load(domain_name=self.domain_name, task_name=self.task_name,
@@ -59,7 +59,7 @@ class SimulationAPI:
         rebuilds XML files in passive_hand from XML files in passive_hand_unmodified
         """
         pm = Parameterizer()
-        pm.export_XML()
+        pm._export_xml()
 
     def export_parameters(self) -> EnvironmentParametrization:
         return self.environmental_parametrization

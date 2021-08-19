@@ -1,13 +1,12 @@
 from dm_control import viewer
-from dm_env import TimeStep, Environment
-import utility
-import numpy as np
-from controller import RobotController, SplineTrajectory, LinearTrajectory
+from dm_env import TimeStep
+from simulation.dm_control_cur.utility_classes import data_wrappers
+from controller import RobotController, LinearTrajectory
 from simulation_api import SimulationAPI
 
 # env = simulation_control.load(domain_name='passive_hand', task_name='lift_sparse', task_kwargs={'time_limit': float('20')})  # type: Environment
 simulation_api = SimulationAPI()
-parameters = utility.EnvironmentParametrization({'object_change_slope':0.0})
+parameters = data_wrappers.EnvironmentParametrization({'object_change_slope':0.0})
 
 simulation_api.reset(parameters=parameters, task_parameters={'time_limit': float('20')})
 
@@ -28,7 +27,7 @@ liftTrajectory.add_state(pos=[1.4, 0.74909766, 1], vert_rot=0, twist_rot=0)
 controller.add_trajectory(liftTrajectory, 12)
 
 def controller_policy(time_step: TimeStep):
-    readings = utility.SensorsReading(time_step.observation)
+    readings = data_wrappers.SensorsReading(time_step.observation)
     return controller.get_action(readings)
 
 

@@ -10,7 +10,6 @@ class ResidualSimulation(Simulation):
     def __init__(
             self,
             train_controller=True,
-            controller_show=True,
             controller_num_episodes=50,
             **kwargs
     ):
@@ -26,9 +25,9 @@ class ResidualSimulation(Simulation):
         )
         if train_controller:
             self.controller.train()
-            if controller_show:
-                self.controller.show_simulation()
 
+    def show_controller_simulation(self):
+        self.controller.show_simulation()
 
     def train(self):
         rewards = []
@@ -61,13 +60,14 @@ class ResidualSimulation(Simulation):
         self.agent.save(self.MODEL_PATH)
 
         if self.PLOT:
-            plt.plot(rewards)
-            plt.plot(avg_rewards)
-            plt.plot()
-            plt.xlabel('Episode')
-            plt.ylabel('Reward')
+            fig, ax = plt.subplots(figsize=(12, 6))
+            ax.plot(rewards)
+            ax.plot(avg_rewards)
+            ax.set_xlabel('Episode')
+            ax.set_ylabel('Reward')
+            plt.ylim([0, self.DURATION])
+            plt.xlim([0, self.NUM_EPISODES])
             plt.savefig(self.DATA_PATH)
-            plt.show()
 
     def show_simulation(self):
         t = -1
@@ -82,39 +82,3 @@ class ResidualSimulation(Simulation):
             return action
 
         viewer.launch(self.env, policy=policy)
-
-
-res = ResidualSimulation(
-    train_controller=True,
-    controller_num_episodes=25,
-    controller_show=False,
-    label='residual',
-
-    load_model=False,
-    plot=True,
-    show_simulation=True,
-    name_model='cartpole',
-    task='balance',
-    num_episodes=100,
-    batch_size=128,  # number of past simulations to use for training
-    duration=200,
-
-)
-
-res.train()
-# res.show_simulation()
-
-sim = Simulation(
-    load_model=False,
-    plot=True,
-    show_simulation=True,
-    name_model='cartpole',
-    task='balance',
-    label=None,
-    num_episodes=100,
-    batch_size=128,  # number of past simulations to use for training
-    duration=200,
-
-)
-sim.train()
-

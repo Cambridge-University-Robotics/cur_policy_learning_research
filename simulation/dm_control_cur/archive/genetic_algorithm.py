@@ -10,7 +10,7 @@ from deap import tools
 from tqdm import tqdm
 
 from config import *
-from utility import SensorsReading
+from simulation.dm_control_cur.utility_classes.data_wrappers import SensorsReading
 
 
 def temp_reward_func(last_reward: float, step: int, last_step: bool, readings: SensorsReading) -> float:

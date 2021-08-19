@@ -1,4 +1,4 @@
-from simulation.dm_control.ddpg.ddpg_classes.ddpg import DDPGagent, OUNoise
+from simulation.dm_control_cur.ddpg.ddpg_classes.ddpg_base import DDPGagent, OUNoise
 
 """
 This script will run training for different models/configurations on different

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 
+
 # Wrapper classes
 class EnvironmentParametrization():
     DEFAULT = {
@@ -12,6 +13,7 @@ class EnvironmentParametrization():
         'robot_change_thumb_spring_default': 0.0,
         'robot_change_friction': 0.0
     }
+
     def __init__(self,
                  parameters: dict
                  ):
@@ -82,11 +84,14 @@ class SensorsReading():
         # ('object_velr', array([0., 0., 0.])),
         # ('object_rel_velp', array([ 1.37942599, -0.23459532,  0.04909928]))]))
 
+
 def clamp(x, min_val, max_val):
     return max(min_val, min(x, max_val))
 
+
 def to_action(pos, vert_angle, twist_angle):
     return np.concatenate([pos, vert_angle, twist_angle], axis=None)
+
 
 def normalize(v):
     return v / np.linalg.norm(v)

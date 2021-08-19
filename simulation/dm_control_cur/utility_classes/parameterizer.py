@@ -1,69 +1,114 @@
 import random
-import shutil, os
-import copy
-import inspect
-
+import os
+from abc import ABC, abstractmethod
 import numpy as np
 import xml.etree.ElementTree as ET
-import simulation.dm_control.utility as utility
+import simulation.dm_control_cur.utility_classes.data_wrappers as utility
 
-class Parameterizer:
-    """
-    Randomizes parameters in XML.
 
-    How to use:
+class AbstractParameterizer(ABC):
+    @abstractmethod
+    def update_xml(self, obj_amt=None, rbt_amt=None, amt=None, params=None):
+        pass
 
-    pm = Parameterizer()
-    pm.randomize_all(0.2) // returns an array of random doubles used to parametrize
-    pm.export_XML()
+    @abstractmethod
+    def get_parameters(self):
+        pass
 
-    """
+
+def _translate(pos: str, dx, dy, dz) -> str:
+    """takes a position string, translates it by dxyz, and returns it"""
+
+    xyz = np.array([float(x) for x in pos.split(' ')])
+    dxyz = np.array([dx, dy, dz])
+    xyz = list(xyz + dxyz)
+    xyz = [str(x) for x in xyz]
+    xyz = ' '.join(xyz)
+    return xyz
+
+
+def printer(e):
+    print("Curr: " + e.tag, e.attrib)
+    print("Children: ")
+    for child in e:
+        print(child.tag, child.attrib)
+    print()
+
+
+def random11():
+    return 2 * random.random() - 1
+
+
+def random01():
+    return random.random()
+
+
+class Parameterizer(AbstractParameterizer):
     TOTAL_PARAMETERS = 7
     PARAMETER_DICT = utility.EnvironmentParametrization.DEFAULT.copy()
 
-    xml_folder = os.path.join(os.path.dirname(__file__), 'simulation_control', 'environments', 'assets')
+    xml_folder = os.path.join(os.path.dirname(__file__), '../simulation_control', 'environments', 'assets')
     unmodified_lift = os.path.join(xml_folder, 'passive_hand_unmodified', 'lift.xml')
     unmodified_robot = os.path.join(xml_folder, 'passive_hand_unmodified', 'robot.xml')
     modified_lift = os.path.join(xml_folder, 'passive_hand', 'lift.xml')
     modified_robot = os.path.join(xml_folder, 'passive_hand', 'robot.xml')
 
-    def update_XML(self):
-        FUNC_ARR = [
-            self.object_translate,
-            self.object_change_slope,
-            self.robot_change_finger_length,
-            self.robot_change_joint_stiffness,
-            self.robot_change_finger_spring_default,
-            self.robot_change_thumb_spring_default,
-            self.robot_change_friction
+    def update_xml(self, obj_amt=None, rbt_amt=None, amt=None, params=None):
+        if obj_amt is not None:
+            self._randomize_object(obj_amt)
+        elif rbt_amt is not None:
+            self._randomize_robot(rbt_amt)
+        elif amt is not None:
+            self._randomize_all(amt)
+        elif params is not None:
+            self._set_all(params)
+        func_arr = [
+            self._object_translate,
+            self._object_change_slope,
+            self._robot_change_finger_length,
+            self._robot_change_joint_stiffness,
+            self._robot_change_finger_spring_default,
+            self._robot_change_thumb_spring_default,
+            self._robot_change_friction
         ]
-        for func in FUNC_ARR:
+        for func in func_arr:
             print('updated', func.__name__)
             func(self.PARAMETER_DICT[func.__name__])
+        self.lift_tree.write(Parameterizer.modified_lift)
+        self.robot_tree.write(Parameterizer.modified_robot)
 
-    def set_all(self, d: dict):
+    def get_parameters(self) -> dict:
+        return self.PARAMETER_DICT
+
+    def _set_all(self, d: dict):
         assert len(d) == len(self.PARAMETER_DICT)
         for k in d:
             assert k in self.PARAMETER_DICT
         self.PARAMETER_DICT = d
 
-    def randomize_all(self, v):
-        assert v >= 0 and v <= 1
-        self.randomize_object(v)
-        self.randomize_robot(v)
+    def _randomize_all(self, v):
+        assert 0 <= v <= 1
+        self._randomize_object(v)
+        self._randomize_robot(v)
 
-    def randomize_object(self, v):
-        assert v >= 0 and v <= 1
+    def _randomize_object(self, v):
+        assert 0 <= v <= 1
         self.PARAMETER_DICT['object_translate'] = random.random() * v
         self.PARAMETER_DICT['object_change_slope'] = random.random() * v
 
-    def randomize_robot(self, v):
-        assert v >= 0 and v <= 1
+    def _randomize_robot(self, v):
+        assert 0 <= v <= 1
         self.PARAMETER_DICT['robot_change_finger_length'] = random.random() * v
         self.PARAMETER_DICT['robot_change_joint_stiffness'] = random.random() * v
         self.PARAMETER_DICT['robot_change_finger_spring_default'] = random.random() * v
         self.PARAMETER_DICT['robot_change_thumb_spring_default'] = random.random() * v
         self.PARAMETER_DICT['robot_change_friction'] = random.random() * v
+
+    def _export_xml(self):
+        self.update_xml()
+        self.lift_tree.write(Parameterizer.modified_lift)
+        self.robot_tree.write(Parameterizer.modified_robot)
+        # return self.PARAMETER_DICT
 
     def __init__(self):
         """Initialises an xml tree for lift.xml and robot.xml"""
@@ -74,37 +119,27 @@ class Parameterizer:
         self.lift_root = self.lift_tree.getroot()
         self.robot_root = self.robot_tree.getroot()
 
-    def _translate(self, pos: str, dx, dy, dz) -> str:
-        """takes a position string, translates it by dxyz, and returns it"""
-
-        xyz = np.array([float(x) for x in pos.split(' ')])
-        dxyz = np.array([dx, dy, dz])
-        xyz = list(xyz + dxyz)
-        xyz = [str(x) for x in xyz]
-        xyz = ' '.join(xyz)
-        return xyz
-
-    def object_translate(self, v):
+    def _object_translate(self, v):
         """
         Shifts the object randomly about its origin by a random distance within
         v * object radius
         """
-        dx = 0.025 * v * self.random11()
-        dy = 0.025 * v * self.random11()
+        dx = 0.025 * v * random11()
+        dy = 0.025 * v * random11()
         dz = 0
 
         object = [i for i in self.lift_root.iter('body') if i.get('name') == 'object0'][0]
 
         pos = object.attrib['pos']
-        object.attrib['pos'] = self._translate(pos, dx, dy, dz)
+        object.attrib['pos'] = _translate(pos, dx, dy, dz)
 
         tables = [i for i in self.lift_root.iter('body') if 'table' in i.get('name')]
         for table in tables:
             pos = table.attrib['pos']
-            table.attrib['pos'] = self._translate(pos, dx, dy, dz)
+            table.attrib['pos'] = _translate(pos, dx, dy, dz)
 
     # def object_change_slope(self, r=0.025, rbtm=0.03, h=0.120, t=0.012):
-    def object_change_slope(self, v):
+    def _object_change_slope(self, v):
 
         """
         v -- Range: [0..1]
@@ -119,8 +154,8 @@ class Parameterizer:
         t -- thickness of each slice
         """
 
-        r = 0.035 #0.025
-        rbtm = 0.013 + self.random11() * v * 0.012
+        r = 0.035  # 0.025
+        rbtm = 0.013 + random11() * v * 0.012
         h = 0.120
         t = 0.012
         n = int(h / t)
@@ -138,7 +173,7 @@ class Parameterizer:
                                    material='block_mat', mass='0')
             object.append(cylinder)
 
-    def robot_change_finger_length(self, v):
+    def _robot_change_finger_length(self, v):
         """
         Randomly changes the finger length by up to v * 0.02
 
@@ -147,7 +182,7 @@ class Parameterizer:
 
         0.02 is hardcoded, it makes the fingers looong
         """
-        extra_length = 0.01 * (1 + v * self.random11())
+        extra_length = 0.01 * (1 + v * random11())
         finger_segment_list = []
         for element in self.robot_root.iter('body'):
             for finger_part in ["proximal", "middle", "distal"]:
@@ -155,19 +190,19 @@ class Parameterizer:
                     finger_segment_list.append(element)
 
         for finger_segment in finger_segment_list:
-            finger_segment.attrib['pos'] = self._translate(finger_segment.attrib['pos'], 0, 0, extra_length)
+            finger_segment.attrib['pos'] = _translate(finger_segment.attrib['pos'], 0, 0, extra_length)
 
-    def robot_change_joint_stiffness(self, v):
+    def _robot_change_joint_stiffness(self, v):
         """
         Changes the stiffness value randomly by up to v of the original value
         """
-        stiffness = 80.0 * (1 + v * self.random11())
+        stiffness = 80.0 * (1 + v * random11())
         palm = [i for i in self.robot_root.iter('body') if i.get('name') == 'robot0:palm'][0]
         joints = [i for i in palm.iter('joint')]
         for i in joints:
             i.attrib['stiffness'] = str(stiffness)
 
-    def robot_change_finger_spring_default(self, v):
+    def _robot_change_finger_spring_default(self, v):
         """
         Changes default spring value randomly by up to v of the original value
 
@@ -175,13 +210,13 @@ class Parameterizer:
         a is in the range [0, 1.571], where 0 is for fully extended and 1.571 is for fully bent.
         a -- default position for all three fingers (original: 0.8)
         """
-        a = 0.8 * (1 + v * self.random11())
+        a = 0.8 * (1 + v * random11())
         palm = [i for i in self.robot_root.iter('body') if i.get('name') == 'robot0:palm'][0]
         for i in palm.iter('joint'):
             if not any(_ in i.attrib['name'] for _ in ["J4", "J3", "TH"]):
                 i.attrib['springref'] = str(a)
 
-    def robot_change_thumb_spring_default(self, v):
+    def _robot_change_thumb_spring_default(self, v):
         """
         Changes default spring value randomly by up to v of the original value
 
@@ -191,9 +226,9 @@ class Parameterizer:
         b -- thumb base rotation in the palm plane, range [0, 1.6], where 0 is when thumb is closest to the index finger(adduction)
         c -- distal knuckle bending, range [-1.571, 0], where -1.571 is for fully bent
         """
-        a = -0.1 * (1 + v * self.random01())
-        b = 1.6 * (1 + v * self.random01())
-        c = -0.8 * (1 + v * self.random01())
+        a = -0.1 * (1 + v * random01())
+        b = 1.6 * (1 + v * random01())
+        c = -0.8 * (1 + v * random01())
         thbase = [i for i in self.robot_root.iter('body') if i.get('name') == 'robot0:thbase'][0]
         for i in thbase.iter('joint'):
             if (i.attrib['name'] == "robot0:THJ4"):
@@ -203,7 +238,7 @@ class Parameterizer:
             elif (i.attrib['name'] == "robot0:THJ0"):
                 i.attrib['springref'] = str(c)
 
-    def robot_change_friction(self, v):
+    def _robot_change_friction(self, v):
         """
         Changes default friction value randomly by up to v of the original value
 
@@ -213,9 +248,9 @@ class Parameterizer:
         b -- rotational friction
         c -- rolling friction
         """
-        a = 1 * (1 + v * self.random11())
-        b = 0.005 * (1 + v * self.random11())
-        c = 0.0001 * (1 + v * self.random11())
+        a = 1 * (1 + v * random11())
+        b = 0.005 * (1 + v * random11())
+        c = 0.0001 * (1 + v * random11())
 
         for site in ['th', 'ff', 'mf', 'rf', 'lf']:
             body = [i for i in self.robot_root.iter('body') if i.get('name') == 'robot0:' + site + 'distal'][0]
@@ -223,28 +258,8 @@ class Parameterizer:
             f = ' '.join(map(str, [a, b, c]))
             tip.set('friction', f)
 
-    def debug(self):
-        self.printer(self.lift_root[1])
-
-    def printer(self, e):
-        print("Curr: " + e.tag, e.attrib)
-        print("Children: ")
-        for child in e:
-            print(child.tag, child.attrib)
-        print()
-
-    def random11(self):
-        return 2 * random.random() - 1
-
-    def random01(self):
-        return random.random()
-    def get_parameters(self) -> dict:
-        return self.PARAMETER_DICT
-    def export_XML(self):
-        self.update_XML()
-        self.lift_tree.write(Parameterizer.modified_lift)
-        self.robot_tree.write(Parameterizer.modified_robot)
-        # return self.PARAMETER_DICT
+    def _debug(self):
+        printer(self.lift_root[1])
 
 # Example code:
 # pm = Parameterizer()

@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dm_control import suite, viewer
 from tqdm import tqdm
-from simulation.dm_control.ddpg.ddpg_classes.ddpg import DDPGagent
-from simulation.dm_control.ddpg.ddpg_classes.utils import MemorySeq
+from simulation.dm_control_cur.ddpg.ddpg_classes.ddpg_base import DDPGagent
+from simulation.dm_control_cur.ddpg.ddpg_classes.utils import MemorySeq
 from datetime import datetime
 from pathlib import Path
 
@@ -36,10 +36,10 @@ class Simulation(AbstractSimulation):
             self,
             load_model=False,
             plot=True,
-            show_simulation=True,
             name_model='cartpole',
             task='balance',
-            label=None,
+            env=None,  # used if we inject an environment
+            label=None,  # tag that is appended to file name for models and graphs
             num_episodes=50,  # number of simulation rounds before training session
             batch_size=128,  # number of past simulations to use for training
             duration=50,  # duration of simulation
@@ -55,7 +55,6 @@ class Simulation(AbstractSimulation):
         self.DURATION = duration
         self.BATCH_SIZE = batch_size
         self.NUM_EPISODES = num_episodes
-        self.SHOW_SIMULATION = show_simulation
         self.PLOT = plot
         self.MODELS_STR = 'models'
         self.DATA_STR = 'data'
@@ -64,7 +63,8 @@ class Simulation(AbstractSimulation):
         label = f'{label}_' if label is not None else ''
         self.MODEL_PATH = f'{self.MODELS_STR}/{label}{name_model}_{task}'
         self.DATA_PATH = f'{self.DATA_STR}/{label}{name_model}_{task}_{date_time}'
-        self.env = suite.load(name_model, task, task_kwargs={'random': random_state})
+        tmp = env if env is not None else suite
+        self.env = tmp.load(name_model, task, task_kwargs={'random': random_state})
         action_spec = self.env.action_spec()
         obs_spec = self.env.observation_spec()
         dim_action = action_spec.shape[0]
@@ -116,13 +116,14 @@ class Simulation(AbstractSimulation):
         self.agent.save(self.MODEL_PATH)
 
         if self.PLOT:
-            plt.plot(rewards)
-            plt.plot(avg_rewards)
-            plt.plot()
-            plt.xlabel('Episode')
-            plt.ylabel('Reward')
+            fig, ax = plt.subplots(figsize=(12, 6))
+            ax.plot(rewards)
+            ax.plot(avg_rewards)
+            ax.set_xlabel('Episode')
+            ax.set_ylabel('Reward')
+            plt.ylim([0, self.DURATION])
+            plt.xlim([0, self.NUM_EPISODES])
             plt.savefig(self.DATA_PATH)
-            plt.show()
 
     def show_simulation(self):
         t = -1
