@@ -17,6 +17,7 @@ OBJECT_INITIAL_HEIGHT = 0.46163282
 SUITE = containers.TaggedTasks()
 mjlib = mjbindings.mjlib
 
+
 def _load_physics(model_path):
     if model_path.startswith('/'):
         fullpath = model_path
@@ -26,12 +27,14 @@ def _load_physics(model_path):
         raise IOError('File {} does not exist'.format(fullpath))
     return Physics.from_xml_path(fullpath)
 
+
 @SUITE.add()
 def lift_sparse(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
     physics = _load_physics(MODEL_XML_PATH)
     task = Lift(sparse=True, random=random)
     environment_kwargs = environment_kwargs or {}
     return control.Environment(physics, task, time_limit=time_limit, **environment_kwargs, n_sub_steps=_N_SUBSTEPS)
+
 
 class Physics(base.Physics):
     def grip_position(self):
@@ -41,7 +44,7 @@ class Physics(base.Physics):
         return self.get_site_vel('robot0:grip', False)[3:]
 
     def grip_rotation(self):
-        return self.named.data.site_xmat['robot0:grip'].reshape((3,3))
+        return self.named.data.site_xmat['robot0:grip'].reshape((3, 3))
 
     def object_position(self):
         return self.named.data.site_xpos['object0']
@@ -51,6 +54,7 @@ class Physics(base.Physics):
 
     def object_angular_velocity(self):
         return self.get_site_vel('object0', False)[:3]
+
 
 class Lift(control.Task):
     def __init__(self, sparse, random=None):
@@ -89,7 +93,7 @@ class Lift(control.Task):
         Args:
           physics: An instance of `mujoco.Physics`.
         """
-        self._physics_setup(physics,self.initial_qpos)
+        self._physics_setup(physics, self.initial_qpos)
         physics.forward()
 
     def _physics_setup(self, physics, initial_qpos):

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 # Ornstein-Ulhenbeck Process
 # Taken from #https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
 class OUNoise(object):
-    def __init__(self, action_dim, action_low, action_high, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3,
+    def __init__(self, action_dim, action_low, action_high, mu=0.0, theta=0.15, max_sigma=0.5, min_sigma=0.5,
                  decay_period=100000):
         self.mu = mu
         self.theta = theta

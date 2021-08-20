@@ -3,7 +3,6 @@ import os
 from abc import ABC, abstractmethod
 import numpy as np
 import xml.etree.ElementTree as ET
-import simulation.dm_control_cur.utility_classes.data_wrappers as utility
 
 
 class AbstractParameterizer(ABC):
@@ -44,8 +43,16 @@ def random01():
 
 
 class Parameterizer(AbstractParameterizer):
-    TOTAL_PARAMETERS = 7
-    PARAMETER_DICT = utility.EnvironmentParametrization.DEFAULT.copy()
+    PARAMETER_DICT = {
+        '_object_translate': 0.0,
+        '_object_change_slope': 0.0,
+        '_robot_change_finger_length': 0.0,
+        '_robot_change_joint_stiffness': 0.0,
+        '_robot_change_finger_spring_default': 0.0,
+        '_robot_change_thumb_spring_default': 0.0,
+        '_robot_change_friction': 0.0
+    }
+    TOTAL_PARAMETERS = len(PARAMETER_DICT)
 
     xml_folder = os.path.join(os.path.dirname(__file__), '../simulation_control', 'environments', 'assets')
     unmodified_lift = os.path.join(xml_folder, 'passive_hand_unmodified', 'lift.xml')

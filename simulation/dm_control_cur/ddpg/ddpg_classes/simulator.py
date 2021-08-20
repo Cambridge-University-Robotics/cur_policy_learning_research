@@ -23,12 +23,13 @@ class AbstractSimulation(ABC):
     def get_action(self, state, t):
         pass
 
+    @abstractmethod
+    def modify_obs(self, obs):
+        pass
 
-def parse(obs):
-    x = np.array([])
-    for _, v in obs.items():
-        x = np.append(x, v)
-    return x
+    @abstractmethod
+    def modify_action(self, action, state, t):
+        pass
 
 
 class Simulation(AbstractSimulation):
@@ -38,11 +39,14 @@ class Simulation(AbstractSimulation):
             plot=True,
             name_model='cartpole',
             task='balance',
-            env=None,  # used if we inject an environment
             label=None,  # tag that is appended to file name for models and graphs
             num_episodes=50,  # number of simulation rounds before training session
             batch_size=128,  # number of past simulations to use for training
             duration=50,  # duration of simulation
+
+            env=None,  # used if we inject an environment
+            dim_action=None,
+            dim_obs=None,
 
             random_state=np.random.RandomState(42),
             date_time=datetime.now().strftime("%d:%m:%Y-%H:%M:%S"),
@@ -63,12 +67,11 @@ class Simulation(AbstractSimulation):
         label = f'{label}_' if label is not None else ''
         self.MODEL_PATH = f'{self.MODELS_STR}/{label}{name_model}_{task}'
         self.DATA_PATH = f'{self.DATA_STR}/{label}{name_model}_{task}_{date_time}'
-        tmp = env if env is not None else suite
-        self.env = tmp.load(name_model, task, task_kwargs={'random': random_state})
+        env = env or suite
+        self.env = env.load(name_model, task, task_kwargs={'random': random_state})
         action_spec = self.env.action_spec()
-        obs_spec = self.env.observation_spec()
-        dim_action = action_spec.shape[0]
-        dim_obs = sum(tuple(map(lambda x: int(np.prod(x.shape)), obs_spec.values())))
+        dim_action = dim_action or action_spec.shape[0]
+        dim_obs = dim_obs or sum(tuple(map(lambda x: int(np.prod(x.shape)), self.env.observation_spec().values())))
         self.agent = DDPGagent(
             num_states=dim_obs,
             num_actions=dim_action,
@@ -87,6 +90,16 @@ class Simulation(AbstractSimulation):
     def get_action(self, state, t):
         return self.agent.get_action(state, t)
 
+    def modify_obs(self, obs):
+        """default dm_control env obs parsing"""
+        x = np.array([])
+        for _, v in obs.items():
+            x = np.append(x, v)
+        return x
+
+    def modify_action(self, action, state, t):
+        return action
+
     def train(self):
         rewards = []
         avg_rewards = []
@@ -94,13 +107,18 @@ class Simulation(AbstractSimulation):
         tqdm_range = tqdm(range(self.NUM_EPISODES))
         for episode in tqdm_range:
             time_step = self.env.reset()
-            state = parse(time_step.observation)
+            state = self.modify_obs(time_step.observation)
             episode_reward = 0
 
             for t in range(self.DURATION):
                 action = self.agent.get_action(state, t=t)
-                time_step_2 = self.env.step(action)
-                state_2 = parse(time_step_2.observation)
+                action_modified = self.modify_action(action, state, t)
+                try:
+                    time_step_2 = self.env.step(action_modified)
+                except Exception as e:
+                    print(e)
+                    break
+                state_2 = self.modify_obs(time_step_2.observation)
                 self.agent.push(state, action, time_step_2.reward, state_2, -1)
                 state = state_2
                 self.agent.update(self.BATCH_SIZE)
@@ -121,9 +139,11 @@ class Simulation(AbstractSimulation):
             ax.plot(avg_rewards)
             ax.set_xlabel('Episode')
             ax.set_ylabel('Reward')
-            plt.ylim([0, self.DURATION])
+            # plt.ylim([0, self.DURATION])
             plt.xlim([0, self.NUM_EPISODES])
             plt.savefig(self.DATA_PATH)
+            with open(f'{self.DATA_PATH}.txt', "w") as f:
+                f.write(f'{[rewards, avg_rewards]}')
 
     def show_simulation(self):
         t = -1
@@ -131,8 +151,9 @@ class Simulation(AbstractSimulation):
         def policy(time_step):
             nonlocal t
             t += 1
-            state = parse(time_step.observation)
+            state = self.modify_obs(time_step.observation)
             action = self.agent.get_action(state, t)
-            return action
+            action_modified = self.modify_action(action, state, t)
+            return action_modified
 
         viewer.launch(self.env, policy=policy)

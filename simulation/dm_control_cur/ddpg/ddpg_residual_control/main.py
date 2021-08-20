@@ -4,12 +4,12 @@ from ddpg_classes.simulator_residual import ResidualSimulation
 # Note: double check load, train, show_simulation values before using!!!
 res = ResidualSimulation(
     # controller options
-    train_controller=True,
+    controller_load_model=True,
     controller_num_episodes=25,
 
     # simulation options
     label='residual',
-    load_model=False,
+    load_model=True,
     plot=True,
     name_model='cartpole',
     task='balance',
@@ -17,12 +17,12 @@ res = ResidualSimulation(
     batch_size=128,
     duration=500,
 )
-
-# res.show_simulation()
-res.train()
+# res.train_controller()
+res.show_simulation()
+# res.train()
 
 sim = Simulation(
-    load_model=False,
+    load_model=True,
     plot=True,
     name_model='cartpole',
     task='balance',
@@ -32,5 +32,5 @@ sim = Simulation(
     duration=500,
 
 )
-# sim.show_simulation()
-sim.train()
+sim.show_simulation()
+# sim.train()
