@@ -35,10 +35,9 @@ class Object(composer.Entity):
         self._model = mjcf.RootElement()
         self._model.asset.add('material', name='block_mat', specular=0, shininess=0.5, reflectance=0,
                                   rgba=[0.2, 0.2, 0.2, 1])
-        self._model.worldbody.add('body', name='object0', pos=[0, 0, 0])
-        self._model.worldbody.body['object0'].add('site', name='object0', type='sphere', size=[0.02, 0.02, 0.10],
+        self._model.worldbody.add('site', name='object0', type='sphere', size=[0.02, 0.02, 0.10],
                                             rgba=[1, 0, 0, 1], pos=[0, 0, 0])
-        self._model.worldbody.body['object0'].add('geom', name='object0', type='cylinder', condim=3, material='block_mat',
+        self._model.worldbody.add('geom', name='object0', type='cylinder', condim=3, material='block_mat',
                                             mass=0.5, size=[0.004, 0.10], pos=[0, 0, -0.01])
 
     @property
@@ -94,7 +93,7 @@ class Lift(composer.Task):
         self._object = obj
         self._arena = TableArena()
         self._arena.add_free_entity(self._object)
-        self._arena.add_free_entity(self._robot)
+        self._arena.attach(self._robot)
         self._arena.mjcf_model.worldbody.add('body', name='robot0:mocap', pos=[0, 0, 0], mocap=True)
         self._arena.mjcf_model.equality.add('weld', body1='robot0:mocap',
                                             body2=self._robot.mjcf_model.find('body', 'robot0:gripper_link'),
