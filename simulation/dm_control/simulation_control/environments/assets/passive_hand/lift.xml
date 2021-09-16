@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco>
+
+
+    <worldbody>
+
+
+        <include file="robot.xml"></include>
+
+
+        <!--		[1.36177789 0.74909766 0.55461739]-->
+        <body name="object0" pos="1.46177789 0.74909766 0.45">
+            <joint name="object0:joint" type="free"></joint>
+<!--            <joint name="object0:joint" type="slide" axis="0 0 1" damping="0.5" limited="true" range="-0.138 10."-->
+<!--                   frictionloss="1.0"></joint>-->
+            <geom solimp="0.9999999999 0.9999999999 0.001 0.5 2" pos="0 0 -0.01" size="0.004 0.10" type="cylinder" condim="3" name="object0" material="block_mat" mass="0.5"></geom>
+<!--            <geom solimp="0.9999999999 0.9999999999 0.001 0.5 2" pos="0 0 -0.08" size="0.004 0.01" type="cylinder" condim="3" name="object0" material="block_mat" mass="0.5"></geom>-->
+            <site name="object0" pos="0 0 0" size="0.02 0.02 0.10" rgba="1 0 0 1" type="sphere"></site>
+        </body>
+    </worldbody>
+
+<!--    <sensor>-->
+<!--        <jointpos name="object0:h" joint="object0:joint"></jointpos>-->
+<!--        <force name="object0:f" site="object0"></force>-->
+<!--    </sensor>-->
+
+    <!--	<actuator>-->
+    <!--		<position ctrllimited="true" ctrlrange="0 0.2" joint="robot0:l_gripper_finger_joint" kp="30000" name="robot0:l_gripper_finger_joint" user="1"></position>-->
+    <!--		<position ctrllimited="true" ctrlrange="0 0.2" joint="robot0:r_gripper_finger_joint" kp="30000" name="robot0:r_gripper_finger_joint" user="1"></position>-->
+    <!--	</actuator>-->
+</mujoco>
