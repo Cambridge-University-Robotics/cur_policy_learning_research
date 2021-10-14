@@ -1,9 +1,10 @@
 from dm_control import composer
 from dm_control import mjcf
 from dm_control.composer.observation import observable
-from ..utils import mjdata_utils, mocap_utils, rotations
+from ..utils import mjdata_utils, mocap_utils, rotations, pymjcf_utils
 from .. import constants
 from dm_control.composer import variation
+from dm_env import specs
 import os
 import numpy as np
 
@@ -92,12 +93,23 @@ class Lift(composer.Task):
         self._robot = robot
         self._object = obj
         self._arena = TableArena()
-        self._arena.add_free_entity(self._object)
-        self._arena.attach(self._robot)
-        self._arena.mjcf_model.worldbody.add('body', name='robot0:mocap', pos=[0, 0, 0], mocap=True)
-        self._arena.mjcf_model.equality.add('weld', body1='robot0:mocap',
+        self._object_attachement_frame = self._arena.add_free_entity(self._object)
+        self._robot_attachment_frame = self._arena.attach(self._robot)
+
+        # add mocap for robot control
+        mocap = self._arena.mjcf_model.worldbody.add('body', name='robot0:mocap', pos=[0, 0, 0], mocap=True)
+        self._arena.mjcf_model.equality.add('weld', body1=mocap,
                                             body2=self._robot.mjcf_model.find('body', 'robot0:gripper_link'),
                                             solimp='0.1 0.5 0.1 0.5 6', solref='0.02 1')
+
+        # add contact constraints for robot with object
+        object_geoms = self._object.mjcf_model.find_all('geom')
+        robot_geoms = self._robot.mjcf_model.find_all('geom')
+
+        for object_geom in object_geoms:
+            for robot_geom in robot_geoms:
+                self._arena.mjcf_model.contact.add('pair', geom1=object_geom, geom2=robot_geom,
+                                                   solimp=[0.9, 0.95, 0.001, 0.5, 2], solref=[0.02, 1])
 
         self._mjcf_variator = variation.MJCFVariator()
         self._physics_variator = variation.PhysicsVariator()
@@ -109,9 +121,9 @@ class Lift(composer.Task):
         self.gripper_extra_height = 0.2
         self.sparse_reward = sparse
         self.initial_qpos = {
-            'robot0:slide0': 0.405,
-            'robot0:slide1': 0.48,
-            'robot0:slide2': 0.0,
+            self._robot_attachment_frame.full_identifier + 'robot0:slide0': 0.405,
+            self._robot_attachment_frame.full_identifier + 'robot0:slide1': 0.48,
+            self._robot_attachment_frame.full_identifier + 'robot0:slide2': 0.0,
 
             # I FOUND THE BUG :DDD 5H OF SEARCHING OMGGGG
             # PLS NEVER HARDCODE AGAIN :'(((((((((((
@@ -121,6 +133,10 @@ class Lift(composer.Task):
     @property
     def root_entity(self):
         return self._arena
+
+    def action_spec(self, physics):
+        '''Since the robot is controlled by a mocap, the action spec matches the dimensions of the mocap'''
+        return specs.BoundedArray(shape=(5,), dtype=np.float, minimum=-1., maximum=1.)
 
     def initialize_episode_mjcf(self, random_state):
         self._mjcf_variator.apply_variations(random_state)
@@ -134,7 +150,8 @@ class Lift(composer.Task):
         physics.forward()
 
         # Move end effector into position.
-        gripper_target = np.array([-0.498, 0.10, -0.531 + self.gripper_extra_height]) + physics.grip_position()
+        gripper_target = np.array([-0.498, 0.10, -0.531 + self.gripper_extra_height]) \
+                         + physics.named.data.site_xpos[self._robot_attachment_frame.full_identifier + 'robot0:grip']
         # gripper_target = np.array([-0.498, 0.005, -0.431 + self.gripper_extra_height]) + physics.grip_position()
 
         # commenting out the line below to stop the console spam
@@ -145,8 +162,8 @@ class Lift(composer.Task):
         physics.named.data.mocap_quat['robot0:mocap'] = gripper_rotation
 
         # change bitmasks for geoms to stop gripper from colliding with object in initialization
-        n_geoms = physics.named.model.body_geomnum['object0']
-        start_geom = physics.named.model.body_geomadr['object0']
+        n_geoms = physics.named.model.body_geomnum[self._object_attachement_frame.full_identifier]
+        start_geom = physics.named.model.body_geomadr[self._object_attachement_frame.full_identifier]
         init_contype = physics.model.geom_contype[start_geom]
         init_conaffinity = physics.model.geom_conaffinity[start_geom]
 
@@ -155,13 +172,13 @@ class Lift(composer.Task):
             physics.model.geom_conaffinity[i] = 2
 
         for _ in range(50):
-            physics.forward()
+            physics.step()
 
         for i in range(start_geom, start_geom + n_geoms):
             physics.model.geom_contype[i] = init_contype
             physics.model.geom_conaffinity[i] = init_conaffinity
 
-    def before_step(self, action, physics):
+    def before_step(self, physics, action, random_state):
         """Sets the control signal for the actuators to values in `action`."""
         action = action.copy()  # ensure that we don't change the action outside of this scope
         pos_ctrl = action[:3]
@@ -181,8 +198,8 @@ class Lift(composer.Task):
         mocap_utils.mocap_set_action(physics, action)
 
     def get_reward(self, physics):
-        grip_pos = physics.named.data.site_xpos['robot0:grip']
-        object_pos = physics.named.data.site_xpos['object0']
+        grip_pos = physics.named.data.site_xpos[self._robot_attachment_frame.full_identifier + 'robot0:grip']
+        object_pos = physics.named.data.site_xpos[self._object_attachement_frame.full_identifier + 'object0']
         dist = np.sum((grip_pos - object_pos) ** 2) ** (1 / 2)  # euclidean distance
         height = object_pos[2] - self.object_initial_height
         height = height * 50

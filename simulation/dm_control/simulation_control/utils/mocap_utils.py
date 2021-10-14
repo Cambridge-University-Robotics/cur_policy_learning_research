@@ -25,7 +25,8 @@ def reset_mocap_welds(physics):
     if physics.model.nmocap > 0 and physics.model.eq_data is not None:
         for i in range(physics.model.eq_data.shape[0]):
             if physics.model.eq_type[i] == EQ_WELD:
-                physics.model.eq_data[i, :] = np.array(
+                print(physics.model.eq_data[i])
+                physics.model.eq_data[i] = np.array(
                     [0., 0., 0., 1., 0., 0., 0.])
     physics.forward()
 
