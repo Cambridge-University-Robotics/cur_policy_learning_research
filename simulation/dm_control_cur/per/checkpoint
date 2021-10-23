@@ -1,0 +1,2 @@
+model_checkpoint_path: "ddpg_HalfCheetah-v2_weights_critic.h5f"
+all_model_checkpoint_paths: "ddpg_HalfCheetah-v2_weights_critic.h5f"

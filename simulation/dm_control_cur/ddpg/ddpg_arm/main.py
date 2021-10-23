@@ -15,5 +15,5 @@ sa = SimulationArm(
     dim_obs=33,
 )
 sa.update_xml(obj_amt=0, rbt_amt=0)
-sa.train()
+# sa.train()
 sa.show_simulation()

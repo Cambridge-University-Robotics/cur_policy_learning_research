@@ -7,6 +7,7 @@ from simulation.dm_control_cur.ddpg.ddpg_classes.ddpg_base import DDPGagent
 from simulation.dm_control_cur.ddpg.ddpg_classes.utils import MemorySeq
 from datetime import datetime
 from pathlib import Path
+import json
 
 
 class AbstractSimulation(ABC):
@@ -55,7 +56,10 @@ class Simulation(AbstractSimulation):
             gamma=0.99,
             tau=1e-2,
     ):
-        # All constants in caps, all objects in snake case
+        """
+        All constants in caps, all objects in snake case
+        Load everything, make directories etc
+        """
         self.DURATION = duration
         self.BATCH_SIZE = batch_size
         self.NUM_EPISODES = num_episodes
@@ -125,25 +129,30 @@ class Simulation(AbstractSimulation):
                 episode_reward += time_step_2.reward
 
             rewards.append(episode_reward)
-            avg_rewards.append(np.mean(rewards[-10:]))
+            avg_reward=np.mean(rewards[-10:])
+            avg_rewards.append(avg_reward)
+
             desc = f"episode: {episode}, " \
                    f"reward: {np.round(episode_reward, decimals=2)}, " \
-                   f"average_reward: {np.mean(rewards[-10:])}"
+                   f"average_reward: {avg_reward}"
             tqdm_range.set_postfix_str(s=desc)
 
-        self.agent.save(self.MODEL_PATH)
-
-        if self.PLOT:
-            fig, ax = plt.subplots(figsize=(12, 6))
-            ax.plot(rewards)
-            ax.plot(avg_rewards)
-            ax.set_xlabel('Episode')
-            ax.set_ylabel('Reward')
-            # plt.ylim([0, self.DURATION])
-            plt.xlim([0, self.NUM_EPISODES])
-            plt.savefig(self.DATA_PATH)
-            with open(f'{self.DATA_PATH}.txt', "w") as f:
-                f.write(f'{[rewards, avg_rewards]}')
+            self.agent.save(self.MODEL_PATH)
+            if self.PLOT:
+                fig, ax = plt.subplots(figsize=(12, 6))
+                ax.plot(rewards)
+                ax.plot(avg_rewards)
+                ax.set_xlabel('Episode')
+                ax.set_ylabel('Reward')
+                # plt.ylim([0, self.DURATION])
+                plt.xlim([0, self.NUM_EPISODES])
+                plt.savefig(self.DATA_PATH)
+                with open(f'{self.DATA_PATH}.json', "w") as fp:
+                    obj = {
+                        'rewards': rewards,
+                        'avg_rewards': avg_rewards,
+                    }
+                    json.dump(obj=obj, fp=fp)
 
     def show_simulation(self):
         t = -1
