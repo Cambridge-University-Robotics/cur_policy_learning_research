@@ -53,6 +53,8 @@ class Simulation(AbstractSimulation):
             date_time=datetime.now().strftime("%d:%m:%Y-%H:%M:%S"),
             actor_learning_rate=1e-4,
             critic_learning_rate=1e-3,
+            hidden_size=256,
+            hidden_depth=1,
             gamma=0.99,
             tau=1e-2,
     ):
@@ -73,6 +75,8 @@ class Simulation(AbstractSimulation):
         self.DATA_PATH = f'{self.DATA_STR}/{self.LABEL}{name_model}_{task}_{date_time}'
         self.ACTOR_LEARNING_RATE = actor_learning_rate
         self.CRITIC_LEARNING_RATE = critic_learning_rate
+        self.HIDDEN_SIZE = hidden_size
+        self.HIDDEN_DEPTH = hidden_depth
         self.GAMMA = gamma
         self.TAU = tau
         env = env or suite
@@ -87,6 +91,8 @@ class Simulation(AbstractSimulation):
             action_high=action_spec.maximum,
             actor_learning_rate=self.ACTOR_LEARNING_RATE,
             critic_learning_rate=self.CRITIC_LEARNING_RATE,
+            hidden_depth=self.HIDDEN_DEPTH,
+            hidden_size=self.HIDDEN_SIZE,
             gamma=self.GAMMA,
             tau=self.TAU,
             memory=MemorySeq
@@ -162,6 +168,8 @@ class Simulation(AbstractSimulation):
                         'duration': self.DURATION,
                         'actor_learning_rate': self.ACTOR_LEARNING_RATE,
                         'critic_learning_rate': self.CRITIC_LEARNING_RATE,
+                        'hidden_size': self.HIDDEN_SIZE,
+                        'hidden_depth': self.HIDDEN_DEPTH,
                         'gamma': self.GAMMA,
                         'tau': self.TAU,
                         'rewards': rewards,

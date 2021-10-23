@@ -5,10 +5,10 @@ import torch.nn.functional as F
 
 
 class Critic(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, hidden_layer_count):
+    def __init__(self, input_size, hidden_size, output_size, hidden_depth):
         super(Critic, self).__init__()
         self.linear_in = nn.Linear(input_size, hidden_size)
-        self.hidden = nn.ModuleList([nn.Linear(hidden_size, hidden_size) for _ in range(hidden_layer_count)])
+        self.hidden = nn.ModuleList([nn.Linear(hidden_size, hidden_size) for _ in range(hidden_depth)])
         self.linear_out = nn.Linear(hidden_size, output_size)
 
     def forward(self, state, action):
@@ -24,10 +24,10 @@ class Critic(nn.Module):
 
 
 class Actor(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, hidden_layer_count):
+    def __init__(self, input_size, hidden_size, output_size, hidden_depth):
         super(Actor, self).__init__()
         self.linear_in = nn.Linear(input_size, hidden_size)
-        self.hidden = nn.ModuleList([nn.Linear(hidden_size, hidden_size) for _ in range(hidden_layer_count)])
+        self.hidden = nn.ModuleList([nn.Linear(hidden_size, hidden_size) for _ in range(hidden_depth)])
         self.linear_out = nn.Linear(hidden_size, output_size)
 
     def forward(self, state):

@@ -1,8 +1,11 @@
 # Decay Constant (Gamma) Test
+
 ## Hypothesis
 Too low a gamma leads to initial states not being able to choose the right actions since the state values get decayed too much, too high a gamma leads to the final states' values exploding.
+
 ## Test
 Run cartpole on various values of gamma
+
 ## Result
 ![aggregated](./aggregated.png)
 
