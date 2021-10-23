@@ -43,7 +43,7 @@ class DDPGagent(Agent):
             action_low,
             action_high,
             hidden_size=256,
-            hidden_layer_count=2,
+            hidden_layer_count=1,
             actor_learning_rate=1e-4,
             critic_learning_rate=1e-3,
             gamma=0.99,
@@ -65,7 +65,8 @@ class DDPGagent(Agent):
         self.actor = Actor(self.num_states, hidden_size, self.num_actions, hidden_layer_count)
         self.actor_target = Actor(self.num_states, hidden_size, self.num_actions, hidden_layer_count)
         self.critic = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions, hidden_layer_count)
-        self.critic_target = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions, hidden_layer_count)
+        self.critic_target = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions,
+                                    hidden_layer_count)
 
         for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data)

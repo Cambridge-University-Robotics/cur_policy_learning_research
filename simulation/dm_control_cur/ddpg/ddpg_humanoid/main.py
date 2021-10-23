@@ -1,11 +1,11 @@
 from ddpg_classes.simulator import Simulation
 
 args = {
-    'load_model': False,
+    'load_model': True,
     'plot': True,
     'name_model': 'humanoid',
     'task': 'stand',
-    'num_episodes': 1000,
+    'num_episodes': 10000,
     # 'num_episodes': 200,
     'batch_size': 128,
     'duration': 100,
