@@ -68,9 +68,9 @@ class Simulation(AbstractSimulation):
         self.DATA_STR = 'data'
         self.NAME_MODEL = name_model
         self.TASK = task
-        label = f'{label}_' if label is not None else ''
-        self.MODEL_PATH = f'{self.MODELS_STR}/{label}{name_model}_{task}'
-        self.DATA_PATH = f'{self.DATA_STR}/{label}{name_model}_{task}_{date_time}'
+        self.LABEL = f'{label}_' if label is not None else ''
+        self.MODEL_PATH = f'{self.MODELS_STR}/{self.LABEL}{name_model}_{task}'
+        self.DATA_PATH = f'{self.DATA_STR}/{self.LABEL}{name_model}_{task}_{date_time}'
         self.ACTOR_LEARNING_RATE = actor_learning_rate
         self.CRITIC_LEARNING_RATE = critic_learning_rate
         self.GAMMA = gamma
@@ -85,10 +85,10 @@ class Simulation(AbstractSimulation):
             num_actions=dim_action,
             action_low=action_spec.minimum,
             action_high=action_spec.maximum,
-            actor_learning_rate=actor_learning_rate,
-            critic_learning_rate=critic_learning_rate,
-            gamma=gamma,
-            tau=tau,
+            actor_learning_rate=self.ACTOR_LEARNING_RATE,
+            critic_learning_rate=self.CRITIC_LEARNING_RATE,
+            gamma=self.GAMMA,
+            tau=self.TAU,
             memory=MemorySeq
         )
         Path(self.MODELS_STR).mkdir(parents=True, exist_ok=True)
@@ -133,7 +133,7 @@ class Simulation(AbstractSimulation):
                 episode_reward += time_step_2.reward
 
             rewards.append(episode_reward)
-            avg_reward=np.mean(rewards[-10:])
+            avg_reward = np.mean(rewards[-10:])
             avg_rewards.append(avg_reward)
 
             desc = f"episode: {episode}, " \
@@ -150,11 +150,13 @@ class Simulation(AbstractSimulation):
                 ax.set_ylabel('Reward')
                 # plt.ylim([0, self.DURATION])
                 plt.xlim([0, self.NUM_EPISODES])
-                plt.savefig(self.DATA_PATH)
+                fig.savefig(self.DATA_PATH)
+                plt.close(fig)
                 with open(f'{self.DATA_PATH}.json', "w") as fp:
                     obj = {
                         'name_model': self.NAME_MODEL,
                         'task': self.TASK,
+                        'label': self.LABEL,
                         'num_episodes': self.NUM_EPISODES,
                         'batch_size': self.BATCH_SIZE,
                         'duration': self.DURATION,
