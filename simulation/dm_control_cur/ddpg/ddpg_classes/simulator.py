@@ -71,6 +71,10 @@ class Simulation(AbstractSimulation):
         label = f'{label}_' if label is not None else ''
         self.MODEL_PATH = f'{self.MODELS_STR}/{label}{name_model}_{task}'
         self.DATA_PATH = f'{self.DATA_STR}/{label}{name_model}_{task}_{date_time}'
+        self.ACTOR_LEARNING_RATE = actor_learning_rate
+        self.CRITIC_LEARNING_RATE = critic_learning_rate
+        self.GAMMA = gamma
+        self.TAU = tau
         env = env or suite
         self.env = env.load(name_model, task, task_kwargs={'random': random_state})
         action_spec = self.env.action_spec()
@@ -149,6 +153,15 @@ class Simulation(AbstractSimulation):
                 plt.savefig(self.DATA_PATH)
                 with open(f'{self.DATA_PATH}.json', "w") as fp:
                     obj = {
+                        'name_model': self.NAME_MODEL,
+                        'task': self.TASK,
+                        'num_episodes': self.NUM_EPISODES,
+                        'batch_size': self.BATCH_SIZE,
+                        'duration': self.DURATION,
+                        'actor_learning_rate': self.ACTOR_LEARNING_RATE,
+                        'critic_learning_rate': self.CRITIC_LEARNING_RATE,
+                        'gamma': self.GAMMA,
+                        'tau': self.TAU,
                         'rewards': rewards,
                         'avg_rewards': avg_rewards,
                     }
