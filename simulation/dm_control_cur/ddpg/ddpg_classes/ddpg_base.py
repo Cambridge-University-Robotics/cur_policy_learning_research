@@ -36,9 +36,22 @@ class Agent(ABC):
 
 
 class DDPGagent(Agent):
-    def __init__(self, num_states, num_actions, action_low, action_high, hidden_size=256,
-                 actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2,
-                 max_memory_size=50000, memory=MemorySeq, noise=OUNoise):
+    def __init__(
+            self,
+            num_states,
+            num_actions,
+            action_low,
+            action_high,
+            hidden_size=256,
+            hidden_layer_count=2,
+            actor_learning_rate=1e-4,
+            critic_learning_rate=1e-3,
+            gamma=0.99,
+            tau=1e-2,
+            max_memory_size=50000,
+            memory=MemorySeq,
+            noise=OUNoise
+    ):
         # Params
         self.num_states = num_states
         self.num_actions = num_actions
@@ -49,10 +62,10 @@ class DDPGagent(Agent):
         self.noise = noise(action_dim=num_actions, action_low=action_low, action_high=action_high)
 
         # Networks
-        self.actor = Actor(self.num_states, hidden_size, self.num_actions)
-        self.actor_target = Actor(self.num_states, hidden_size, self.num_actions)
-        self.critic = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions)
-        self.critic_target = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions)
+        self.actor = Actor(self.num_states, hidden_size, self.num_actions, hidden_layer_count)
+        self.actor_target = Actor(self.num_states, hidden_size, self.num_actions, hidden_layer_count)
+        self.critic = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions, hidden_layer_count)
+        self.critic_target = Critic(self.num_states + self.num_actions, hidden_size, self.num_actions, hidden_layer_count)
 
         for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data)

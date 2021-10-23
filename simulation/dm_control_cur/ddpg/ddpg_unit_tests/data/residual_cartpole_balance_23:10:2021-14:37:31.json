@@ -1,0 +1,1 @@
+{"name_model": "cartpole", "task": "balance", "label": "residual_", "num_episodes": 1, "batch_size": 128, "duration": 100, "actor_learning_rate": 0.0001, "critic_learning_rate": 0.001, "gamma": 0.99, "tau": 0.01, "rewards": [38.18647920005665], "avg_rewards": [38.18647920005665]}

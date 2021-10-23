@@ -1,0 +1,1 @@
+{"name_model": "humanoid", "task": "stand", "label": "", "num_episodes": 100, "batch_size": 128, "duration": 200, "actor_learning_rate": 0.0001, "critic_learning_rate": 0.001, "gamma": 0.9, "tau": 0.01, "rewards": [9.153715683663014], "avg_rewards": [9.153715683663014]}
