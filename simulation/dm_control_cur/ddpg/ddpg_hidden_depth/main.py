@@ -8,7 +8,7 @@ for name_model, task in [
     ('cheetah', 'run'),
     ('walker', 'run'),
 ]:
-    for depth in [1, 2, 3, 4, 5]:
+    for depth in [1, 2, 3, 4]:
         args = {
             'label': f'depth={depth}',
             'load_model': False,
