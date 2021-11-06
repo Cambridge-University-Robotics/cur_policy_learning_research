@@ -46,8 +46,8 @@ class DDPGagent(Agent):
             hidden_depth=1,
             actor_learning_rate=1e-4,
             critic_learning_rate=1e-3,
-            gamma=0.99,
-            tau=1e-2,
+            gamma=0.99,  # reward decay
+            tau=1e-2,  # fraction of weights which are copied to the target networks
             max_memory_size=50000,
             memory=MemorySeq,
             noise=OUNoise
@@ -81,13 +81,13 @@ class DDPGagent(Agent):
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
 
     # use on env output before passing to model
-    def _norm(self, action):
+    def _denorm(self, action):
         act_k = (self.action_high - self.action_low) / 2.
         act_b = (self.action_high + self.action_low) / 2.
         return action * act_k + act_b
 
     # use on model output before passing to env
-    def _denorm(self, action):
+    def _norm(self, action):
         act_k_inv = 2. / (self.action_high - self.action_low)
         act_b = (self.action_high + self.action_low) / 2.
         return act_k_inv * (action - act_b)
