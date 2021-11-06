@@ -50,7 +50,7 @@ class Simulation(AbstractSimulation):
             dim_obs=None,
 
             random_state=np.random.RandomState(42),
-            date_time=datetime.now().strftime("%d:%m:%Y-%H:%M:%S"),
+            date_time=datetime.now().strftime("%d-%m-%Y--%H-%M-%S"),
             actor_learning_rate=1e-4,
             critic_learning_rate=1e-3,
             hidden_size=256,
