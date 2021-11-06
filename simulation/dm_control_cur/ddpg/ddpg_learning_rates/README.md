@@ -12,4 +12,4 @@ The size of the network affects the kind of function it can approximate. We don'
 ## Result
 ![aggregated](./aggregated_cheetah_run.png)
 ![aggregated](./aggregated_walker_run.png)
-Seems like the difference is not statistically significant.
+At the same order of magnitude the differences appear to be insignificant

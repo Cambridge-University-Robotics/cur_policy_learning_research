@@ -10,6 +10,7 @@ The depth of the network affects the kind of function it can approximate. We don
 2. look at model performance across various problems
 
 ## Result
-![aggregated](./aggregated.png)
-
-It is indeed the case that higher values are necessary to train the model properly. More analysis needs to be done regarding high gammas and instability. It might be the case that due to high value states not being reached often, that for complicated environments we don't need to care much about exploding values.
+![aggregated](./aggregated_cheetah_run.png)
+Reward against number of episodes for ```cheetah_run```. Seems like there is no difference in number of layers used. The deeper network seems to converge slower, which makes sense as there are more weights to adjust.
+![aggregated](./aggregated_walker_run.png)
+Reward against number of episodes for ```walker_run```. Seems like there is no difference in number of layers used. The deeper networks seem to converge slower too.

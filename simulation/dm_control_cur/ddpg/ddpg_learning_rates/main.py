@@ -5,9 +5,9 @@ for name_model, task in [
     ('cheetah', 'run'),
     ('walker', 'run'),
 ]:
-    for depth in [1, 2, 3, 4]:
+    for lr in [1, 2, 3, 4, 5]:
         args = {
-            'label': f'depth={depth}',
+            'label': f'lr={lr}',
             'load_model': False,
             'plot': True,
             'name_model': name_model,
@@ -17,8 +17,10 @@ for name_model, task in [
             'batch_size': 128,
             # 'duration': 50,
             'duration': 200,
-            'hidden_depth': depth,
             'hidden_size': 64,
+            'hidden_depth': 4,
+            'actor_learning_rate': lr * 1e-4,
+            'critic_learning_rate': lr * 1e-3,
         }
         sim = Simulation(**args)
         sim.train()

@@ -2,9 +2,6 @@ from ddpg_classes.simulator import Simulation
 from simulation.dm_control_cur.utility_classes import data_utilities
 
 for name_model, task in [
-    ('cartpole', 'balance'),
-    ('swimmer', 'swimmer6'),
-    ('hopper', 'hop'),
     ('cheetah', 'run'),
     ('walker', 'run'),
 ]:
@@ -16,7 +13,7 @@ for name_model, task in [
             'name_model': name_model,
             'task': task,
             # 'num_episodes': 3,
-            'num_episodes': 200,
+            'num_episodes': 500,
             'batch_size': 128,
             # 'duration': 50,
             'duration': 200,
