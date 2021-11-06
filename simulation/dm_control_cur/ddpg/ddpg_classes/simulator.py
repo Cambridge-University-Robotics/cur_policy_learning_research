@@ -1,15 +1,36 @@
-import json
-from datetime import datetime
-from pathlib import Path
-
-import matplotlib.pyplot as plt
+from abc import ABC, abstractmethod
 import numpy as np
+import matplotlib.pyplot as plt
 from dm_control import suite, viewer
 from tqdm import tqdm
-
 from simulation.dm_control_cur.ddpg.ddpg_classes.ddpg_base import DDPGagent
 from simulation.dm_control_cur.ddpg.ddpg_classes.utils import MemorySeq
-from simulation.dm_control_cur.utility_classes.abstract_simulation import AbstractSimulation
+from datetime import datetime
+from pathlib import Path
+import json
+
+
+class AbstractSimulation(ABC):
+
+    @abstractmethod
+    def train(self):
+        pass
+
+    @abstractmethod
+    def show_simulation(self):
+        pass
+
+    @abstractmethod
+    def get_action(self, state, t):
+        pass
+
+    @abstractmethod
+    def modify_obs(self, obs):
+        pass
+
+    @abstractmethod
+    def modify_action(self, action, state, t):
+        pass
 
 
 class Simulation(AbstractSimulation):
