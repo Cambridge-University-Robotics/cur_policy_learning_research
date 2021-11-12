@@ -1,7 +1,7 @@
 # dm_control_cur Project Structure
 ## Overview
 ```
-dm_control_cur/
+dm_control_cur
 ├── simulation_control
 │   ├── environments
 │   └── utils
