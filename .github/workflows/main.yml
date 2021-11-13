@@ -12,7 +12,7 @@ on:
 
 jobs:
   notify_slack:
-    runs-on: ubuntu-lastest
+    runs-on: ubuntu-latest
     steps:
     - name: Notify Slack
       env:
