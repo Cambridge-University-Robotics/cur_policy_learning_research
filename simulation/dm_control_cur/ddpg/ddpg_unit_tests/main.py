@@ -1,6 +1,8 @@
 from pathlib import Path
 import shutil
-from ddpg_classes.simulator import Simulation
+
+from ddpg_classes.simulator_arm import SimulationArm
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 from ddpg_classes.simulator_residual import ResidualSimulation
 import json
 import logging
@@ -16,6 +18,15 @@ for p in a:
 
 # Simulation Tests
 logging.info("Running Simulation tests")
+
+# test if SimulationArm works
+sa = SimulationArm(
+    num_episodes=1,
+    batch_size=128,
+    duration=100,
+)
+sa.train()
+
 #   Training from scratch
 logging.info("Training a Simulation model from scratch")
 sim = Simulation(
@@ -104,7 +115,5 @@ res = ResidualSimulation(
     plot=True,
     name_model='cartpole',
     task='balance',
-    num_episodes=1,
-    batch_size=128,
-    duration=100,
 )
+

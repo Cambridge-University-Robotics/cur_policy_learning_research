@@ -1,4 +1,4 @@
-from ddpg_classes.simulator import Simulation
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 from simulation.dm_control_cur.utility_classes import data_utilities
 
 for gamma in [0.7, 0.9, 0.95, 0.99, 0.995, 0.999]:

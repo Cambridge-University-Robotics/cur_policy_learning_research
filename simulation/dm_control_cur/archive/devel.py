@@ -3,7 +3,7 @@ import simulation_control.environments as environments
 import os
 from config import *
 from genetic_algorithm import load_hof, evaluate
-# from simulation_control.dm_control_cur.genetic_algorithm import load_hof, evaluate
+# from virtual_arm_environment.dm_control_cur.genetic_algorithm import load_hof, evaluate
 
 # hof = load_hof(path=f'{HOF_OUTPUT_DIRECTORY}{os.listdir(HOF_OUTPUT_DIRECTORY)[-1]}')\
 #     .reshape(NUM_STEPS, INPUT_SIZE)

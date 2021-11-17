@@ -27,7 +27,7 @@ def temp_reward_func(last_reward: float, step: int, last_step: bool, readings: S
 
 def solve(simulation_api: SimulationAPI, reward_threshold: float, timeout_s: float = 60, num_hof=1):
     """
-    Run a genetic algorithm on the current simulation_control scenario until reward exceeds the threshold or timeout is reached
+    Run a genetic algorithm on the current virtual_arm_environment scenario until reward exceeds the threshold or timeout is reached
     """
     # need to have a reward function, and to implement timeout termination and when reward exceeds threshold
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
