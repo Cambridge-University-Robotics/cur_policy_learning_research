@@ -5,7 +5,7 @@ import numpy as np
 from controller import RobotController, SplineTrajectory, LinearTrajectory
 from simulation_api import SimulationAPI
 
-# env = simulation_control.load(domain_name='passive_hand', task_name='lift_sparse', task_kwargs={'time_limit': float('inf')})  # type: Environment
+# env = virtual_arm_environment.load(domain_name='passive_hand', task_name='lift_sparse', task_kwargs={'time_limit': float('inf')})  # type: Environment
 simulation_api = SimulationAPI()
 parameters = utility.EnvironmentParametrization({'object_change_slope': 0.0})
 

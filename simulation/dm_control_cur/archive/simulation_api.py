@@ -1,7 +1,7 @@
 from inspect import signature
 from typing import Callable
 
-from simulation.dm_control_cur.simulation_control import environments
+from simulation.dm_control_cur.virtual_arm_environment import environments
 from simulation.dm_control_cur.utility_classes.parameterizer import Parameterizer
 from simulation.dm_control_cur.archive.reward_functions import placeholder_reward_func
 from simulation.dm_control_cur.utility_classes.data_wrappers import *
@@ -31,12 +31,12 @@ class SimulationAPI:
 
     def reset(self, randomize=False, parameters: EnvironmentParametrization = None, task_parameters: dict = None):
         """
-        Resets simulation_control. After a run the hand will be in some weird position so
+        Resets virtual_arm_environment. After a run the hand will be in some weird position so
         you need to call this function to put it back into place. And when resetting
-        you can also choose to randomise the parameters of the simulation_control as well.
+        you can also choose to randomise the parameters of the virtual_arm_environment as well.
 
         :param randomize: whether to randomize the inputs
-        :param parameters: set simulation_control to a specific set of parameters
+        :param parameters: set virtual_arm_environment to a specific set of parameters
         :param task_parameters: parameters to pass to task initialization
         """
         pm = Parameterizer()
@@ -90,7 +90,7 @@ class SimulationAPI:
 
     def run(self, actions) -> float:  # TODO: specify actions type
         """
-        Runs the simulation_control using a sequence of actions that the robot should take.
+        Runs the virtual_arm_environment using a sequence of actions that the robot should take.
 
         :param actions:
             list of actions

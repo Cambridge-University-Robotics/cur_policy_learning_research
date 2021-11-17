@@ -1,9 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from dm_control import viewer
-from tqdm import tqdm
-
-from ddpg_classes.simulator import Simulation
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 
 
 class ResidualSimulation(Simulation):

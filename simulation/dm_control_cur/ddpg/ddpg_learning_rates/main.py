@@ -1,4 +1,4 @@
-from ddpg_classes.simulator import Simulation
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 from simulation.dm_control_cur.utility_classes import data_utilities
 
 for name_model, task in [

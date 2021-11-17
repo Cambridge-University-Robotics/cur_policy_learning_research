@@ -4,13 +4,13 @@ from simulation_api import SimulationAPI
 from simulation_control.dm_control.utility import EnvironmentParametrization
 from simulation_control.dm_control.utility import SensorsReading
 
-# Check if simulation_control API works with a given step input
+# Check if virtual_arm_environment API works with a given step input
 sapi = SimulationAPI()
 sapi.step(np.array([0, 0, 0, 0, 0], dtype='float64'))
 print(sapi.get_sensors_reading().grip_velp)
 print(sapi.export_parameters().object_translate)
 
-# Check if simulation_control API accepts a manual input
+# Check if virtual_arm_environment API accepts a manual input
 t = {
     'object_translate': 6.9,
     'object_change_slope': 0.0,
@@ -24,7 +24,7 @@ ep = EnvironmentParametrization(t)
 sapi.import_parameters(ep)
 print(sapi.export_parameters().object_translate)
 
-# Check if simulation_control API's run function works
+# Check if virtual_arm_environment API's run function works
 x = np.zeros(shape=(10, 5))
 
 

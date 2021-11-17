@@ -54,7 +54,7 @@ class Parameterizer(AbstractParameterizer):
     }
     TOTAL_PARAMETERS = len(PARAMETER_DICT)
 
-    xml_folder = os.path.join(os.path.dirname(__file__), '../simulation_control', 'environments', 'assets')
+    xml_folder = os.path.join(os.path.dirname(__file__), '../virtual_arm_environment', 'environments', 'assets')
     unmodified_lift = os.path.join(xml_folder, 'passive_hand_unmodified', 'lift.xml')
     unmodified_robot = os.path.join(xml_folder, 'passive_hand_unmodified', 'robot.xml')
     modified_lift = os.path.join(xml_folder, 'passive_hand', 'lift.xml')

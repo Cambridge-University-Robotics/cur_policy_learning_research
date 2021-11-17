@@ -1,4 +1,4 @@
-from ddpg_classes.simulator import Simulation
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 from simulation.dm_control_cur.utility_classes.parameterizer import Parameterizer
 import numpy as np
 

@@ -1,38 +1,10 @@
 import torch.autograd
 import torch.optim as optim
+from torch import nn
 
-from .model import *
-from .utils import *
-
-
-class Agent(ABC):
-    """
-    Usage:
-    1. initialise
-    2. get_action (inputs and outputs are normed and denormed)
-    3. push to add experience to memory (include arguments if necessary)
-    4. update to train model
-    """
-
-    @abstractmethod
-    def get_action(self, state, t):
-        pass
-
-    @abstractmethod
-    def push(self, state, action, reward, next_state, done, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def update(self, batch_size):
-        pass
-
-    @abstractmethod
-    def save(self, path_save):
-        pass
-
-    @abstractmethod
-    def load(self, path_load):
-        pass
+from ddpg_classes.model import Actor, Critic
+from ddpg_classes.utils import MemorySeq, OUNoise
+from simulation.dm_control_cur.utility_classes.abstract_classes import Agent
 
 
 class DDPGagent(Agent):

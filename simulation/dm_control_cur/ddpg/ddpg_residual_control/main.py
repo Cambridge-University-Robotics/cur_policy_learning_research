@@ -1,5 +1,4 @@
-from ddpg_classes.simulator import Simulation
-from ddpg_classes.simulator_residual import ResidualSimulation
+from simulation.dm_control_cur.utility_classes.simulator import Simulation
 
 # Note: double check load, train, show_simulation values before using!!!
 # res = ResidualSimulation(

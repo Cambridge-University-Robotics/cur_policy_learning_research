@@ -1,5 +1,5 @@
 from ddpg_classes.simulator_arm import SimulationArm
-import simulation.dm_control_cur.simulation_control.environments as env
+import simulation.dm_control_cur.virtual_arm_environment.environments as env
 
 sa = SimulationArm(
     load_model=True,
