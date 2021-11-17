@@ -7,15 +7,9 @@ residual and transfer learning to train a physical ```Firefly``` arm.
 
 ## Project Structure
 
-There are a lot of old folders, and the important ones are:
-
 ```
 cur_policy_learning_research
-├── physical_arm_learning
-│   └── r12
 └── simulation
     └── dm_control_cur
 ```
-
-```r12``` is the library for interfacing with the ```Firefly``` arm, and ```dm_control_cur``` contains all the
-simulation code.
+We are currently working entirely in ```dm_control_cur```. Refer to the folder's ```README.md``` for more information.
