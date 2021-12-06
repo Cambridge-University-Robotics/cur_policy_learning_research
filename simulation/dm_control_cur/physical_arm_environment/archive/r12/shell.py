@@ -5,7 +5,6 @@ import cmd
 import glob
 import os
 import arm
-import pkg_resources
 import sys
 
 HELP_DIR_NAME = 'help'

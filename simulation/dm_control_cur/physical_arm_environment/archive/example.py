@@ -5,7 +5,6 @@ Created on Fri Nov 22 12:13:35 2019
 
 @author: stan
 """
-import sys
 
 # Import the arm module
 # sys.path.insert(1, '/home/stan/Documents/ML_projects/RL_robotics/r12_python_shell/r12')
