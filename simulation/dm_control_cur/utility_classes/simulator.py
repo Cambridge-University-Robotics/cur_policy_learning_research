@@ -65,9 +65,13 @@ class Simulation(AbstractSimulation):
         self.DATA_PATH = f'{self.DATA_STR}/{self.LABEL}{name_model}_{task}_{date_time}'
         env = env or suite
         self.env = env.load(name_model, task, task_kwargs={'random': random_state})
+        print(self.env.physics, self.env.task, self.env.action_spec())
         action_spec = self.env.action_spec()
+        for i in range(1):
+            print(action_spec.shape[i])
         dim_action = dim_action or action_spec.shape[0]
         dim_obs = dim_obs or sum(tuple(map(lambda x: int(np.prod(x.shape)), self.env.observation_spec().values())))
+        print(dim_obs)
         self.MODEL_INPUTS = {
             "num_states": dim_obs,
             "num_actions": dim_action,
@@ -174,8 +178,22 @@ class Simulation(AbstractSimulation):
             nonlocal t
             t += 1
             state = self.modify_obs(time_step.observation)
+            
             action = self.agent.get_action(state, t)
+            print(action, t)
+            #print(time_step.observation, state)
             action_modified = self.modify_action(action, state, t)
+            #print(type(action_modified), type(action))
             return action_modified
 
-        viewer.launch(self.env, policy=policy)
+        def policy_zero(time_step):
+            state = self.modify_obs(time_step.observation)
+            
+            action = self.agent.get_action(state, t)
+            state_zero = [0, 0, 0, -1 ,0]
+            state_zero_modify = np.array(state_zero)
+            state_zero_modify = state_zero_modify.astype(np.float64)
+            print(state_zero_modify)
+            return state_zero_modify
+
+        viewer.launch(self.env, policy=policy_zero)
