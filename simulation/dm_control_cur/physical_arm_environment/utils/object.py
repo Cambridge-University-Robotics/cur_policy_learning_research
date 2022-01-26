@@ -16,6 +16,8 @@ class Object:
         self.ser.close()
 
     def get_state(self) -> dict:
+        self.ser.read_all()
+        self.ser.readline()
         while True:
             u = self.ser.readline().decode('utf-8')
             if len(u) > 0:
