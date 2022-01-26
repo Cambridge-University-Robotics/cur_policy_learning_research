@@ -1,4 +1,7 @@
 from simulation.dm_control_cur.utility_classes.abstract_classes import Environment
+from simulation.dm_control_cur.physical_arm_environment.utils.arm import FireflyArm
+
+from dm_env import specs
 
 
 class PhysicalEnv(Environment):
@@ -7,15 +10,30 @@ class PhysicalEnv(Environment):
     Still working on it
     """
 
-    # To-do
     def load(self, name_model, task, task_kwargs):
-        pass
+        fa = FireflyArm()
+        fa.connect(port='/dev/ttyUSB0')
+        fa.calibrate()  # arm needs to be calibrated each startup
+        fa.set_state()
+        fa.disconnect()
+        # To be completed
 
     def action_spec(self):
-        pass
+        """
+        Returns a `BoundedArray` spec from dm_env
+        """
+        return specs.BoundedArray(shape=,
+                                  dtype=,
+                                  minimum=,
+                                  maximum=)
 
     def observation_spec(self):
-        pass
+        """
+        Returns:
+          An `OrderedDict` mapping observation name to `specs.Array` containing
+          observation shape and dtype.
+        """
+        return
 
     def reset(self):
         pass
