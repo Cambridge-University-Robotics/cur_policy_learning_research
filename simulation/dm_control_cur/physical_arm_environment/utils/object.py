@@ -2,6 +2,13 @@ import serial
 
 
 class Object:
+    """
+    Usage:
+    o=Object()
+    o.connect()
+    while True:
+        print(o.get_state())
+    """
     def __init__(self):
         self.ser = None
 
@@ -19,6 +26,10 @@ class Object:
         self.ser.read_all()
         self.ser.readline()
         while True:
-            u = self.ser.readline().decode('utf-8')
-            if len(u) > 0:
-                return {'height': int(u)}
+            try:
+                u = self.ser.readline().decode('utf-8')
+                if len(u) > 0:
+                    return {'height': int(u)}
+            except Exception as e:
+                print(e)
+                continue
