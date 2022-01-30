@@ -14,8 +14,8 @@ class PhysicalEnv(Environment):
         fa = FireflyArm()
         fa.connect(port='/dev/ttyUSB0')
         fa.calibrate()  # arm needs to be calibrated each startup
-        fa.set_state()
-        fa.disconnect()
+        # fa.set_state()
+        # fa.disconnect()
         # To be completed
 
     def action_spec(self):
@@ -33,7 +33,7 @@ class PhysicalEnv(Environment):
           An `OrderedDict` mapping observation name to `specs.Array` containing
           observation shape and dtype.
         """
-        return
+        pass
 
     def reset(self):
         pass
