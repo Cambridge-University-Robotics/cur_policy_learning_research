@@ -129,9 +129,6 @@ class Lift(control.Task):
 
         for _ in range(10):
             physics.step()
-        # print(physics.model.geom(contype))
-        # mjlib.mj_inverse(physics.model.ptr, physics.data.ptr)
-        # print(physics.data.qfrc_inverse)
 
     def before_step(self, action, physics):
         """Sets the control signal for the actuators to values in `action`."""

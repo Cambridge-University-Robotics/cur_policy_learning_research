@@ -10,7 +10,9 @@ env = composer.Environment(task)
 action_spec = env.action_spec()
 
 def controller_policy(time_step):
-    return np.random.random(size=action_spec.shape)
+    # return np.random.random(size=action_spec.shape)
+    # return np.zeros(shape=action_spec.shape)
+    return np.array([0., 0., -1., 0., 0.])
 
 
 viewer.launch(env, policy=controller_policy)

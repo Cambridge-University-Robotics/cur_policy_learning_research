@@ -39,7 +39,7 @@ class Object(composer.Entity):
         self._model.worldbody.add('site', name='object0', type='sphere', size=[0.02, 0.02, 0.10],
                                             rgba=[1, 0, 0, 1], pos=[0, 0, 0])
         self._model.worldbody.add('geom', name='object0', type='cylinder', condim=3, material='block_mat',
-                                            mass=0.5, size=[0.004, 0.10], pos=[0, 0, -0.01])
+                                            mass=0.5, size=[0.05, 0.10], pos=[0, 0, 0])
 
     @property
     def mjcf_model(self):
@@ -116,7 +116,7 @@ class Lift(composer.Task):
 
         self.object_initial_height = 0.45
 
-        self._object_initial_pose = (1.46177789, 0.74909766, self.object_initial_height)
+        self._object_initial_pos = (1.46177789, 0.74909766, self.object_initial_height)
 
         self.gripper_extra_height = 0.2
         self.sparse_reward = sparse
@@ -144,15 +144,16 @@ class Lift(composer.Task):
     def initialize_episode(self, physics, random_state):
         self._physics_variator.apply_variations(physics, random_state)
 
+        self._object.set_pose(physics, position=(1.46177789, 0.74909766, self.object_initial_height), quaternion=[0, 0, 0, 0])
+
         for name, value in self.initial_qpos.items():
             physics.named.data.qpos[name] = value
         mocap_utils.reset_mocap_welds(physics)
-        physics.forward()
 
         # Move end effector into position.
         gripper_target = np.array([-0.498, 0.10, -0.531 + self.gripper_extra_height]) \
                          + physics.named.data.site_xpos[self._robot_attachment_frame.full_identifier + 'robot0:grip']
-        # gripper_target = np.array([-0.498, 0.005, -0.431 + self.gripper_extra_height]) + physics.grip_position()
+        # gripper_target = np.array([20., 0., 0.])
 
         # commenting out the line below to stop the console spam
         # print('Ideal Start Position: ', gripper_target)
@@ -166,10 +167,16 @@ class Lift(composer.Task):
         start_geom = physics.named.model.body_geomadr[self._object_attachement_frame.full_identifier]
         init_contype = physics.model.geom_contype[start_geom]
         init_conaffinity = physics.model.geom_conaffinity[start_geom]
+        target_contype = int(1 << 1)
+        # print('Robot Contype and Conaffinity: {} {}'.format(
+        #     physics.named.model.geom_contype[self._robot_attachment_frame.full_identifier + 'robot0:gripper_link'],
+        #     physics.named.model.geom_conaffinity[self._robot_attachment_frame.full_identifier + 'robot0:gripper_link']))
+        # print('Target Contype:', target_contype)
 
         for i in range(start_geom, start_geom + n_geoms):
-            physics.model.geom_contype[i] = 2
-            physics.model.geom_conaffinity[i] = 2
+            physics.model.geom_contype[i] = target_contype
+            physics.model.geom_conaffinity[i] = target_contype
+            # print(physics.model.id2name(i, 'geom'))
 
         for _ in range(50):
             physics.step()
@@ -186,7 +193,7 @@ class Lift(composer.Task):
         # arm origin at [[0.725, 0.74910034]]
         arm_origin = np.asarray([0.725, 0.74910034])
         vertical_angle = action[3]
-        horizontal_angle = -np.arctan2(*(physics.data.mocap_pos[0][:2] - arm_origin)) + np.pi / 2
+        horizontal_angle = -np.arctan2(*(physics.named.data.mocap_pos['robot0:mocap'][:2] - arm_origin)) + np.pi / 2
         twist_angle = action[4]
 
         rot_ctrl = rotations.quat_mul(rotations.quat_mul(rotations.euler2quat([0., 0., horizontal_angle]),
