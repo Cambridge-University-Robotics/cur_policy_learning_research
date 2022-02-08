@@ -79,11 +79,6 @@ class ObjectObservables(composer.Observables):
         return observable.MJCFFeature('site_xpos', obj)
 
     @composer.observable
-    def position(self):
-        obj = self._entity.mjcf_model.find('site', 'object0')
-        return observable.MJCFFeature('site_xpos', obj)
-
-    @composer.observable
     def rotation(self):
         return observable.Generic(lambda x: mjdata_utils.get_site_rot_mat('object0', x))
 
