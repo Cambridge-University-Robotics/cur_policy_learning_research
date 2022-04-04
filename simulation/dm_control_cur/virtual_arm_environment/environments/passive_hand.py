@@ -4,7 +4,7 @@ from dm_control.utils import containers
 import os
 import numpy as np
 import collections
-from ..utils import mocap_utils
+from simulation.dm_control_cur.virtual_arm_environment.utils import mocap_utils
 from simulation.dm_control_cur.virtual_arm_environment.environments import base
 from simulation.dm_control_cur.virtual_arm_environment.utils import rotations
 from dm_env import specs

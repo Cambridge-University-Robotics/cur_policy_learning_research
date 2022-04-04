@@ -21,7 +21,7 @@ from simulation.dm_control_cur.utility_classes.simulator import Simulation
 # res.show_simulation()
 
 sim = Simulation(
-    load_model=False,
+    load_model=True,
     plot=True,
     name_model='cartpole',
     task='balance',
@@ -31,5 +31,6 @@ sim = Simulation(
     duration=500,
 
 )
+#sim.train()
 sim.show_simulation()
-# sim.train()
+

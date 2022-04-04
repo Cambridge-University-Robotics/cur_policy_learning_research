@@ -2,8 +2,8 @@ import torch.autograd
 import torch.optim as optim
 from torch import nn
 
-from ddpg_classes.model import Actor, Critic
-from ddpg_classes.utils import MemorySeq, OUNoise
+from simulation.dm_control_cur.ddpg.ddpg_classes.model import Actor, Critic
+from simulation.dm_control_cur.ddpg.ddpg_classes.utils import MemorySeq, OUNoise
 from simulation.dm_control_cur.utility_classes.abstract_classes import Agent
 
 

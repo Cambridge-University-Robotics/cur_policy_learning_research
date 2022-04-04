@@ -174,8 +174,22 @@ class Simulation(AbstractSimulation):
             nonlocal t
             t += 1
             state = self.modify_obs(time_step.observation)
+            
             action = self.agent.get_action(state, t)
+            # print(action, t)
+            #print(time_step.observation, state)
             action_modified = self.modify_action(action, state, t)
+            #print(type(action_modified), type(action))
             return action_modified
+
+        def policy_zero(time_step):
+            state = self.modify_obs(time_step.observation)
+            
+            action = self.agent.get_action(state, t)
+            state_zero = [0, 0, 0, -1 ,0]
+            state_zero_modify = np.array(state_zero)
+            state_zero_modify = state_zero_modify.astype(np.float64)
+            print(state_zero_modify)
+            return state_zero_modify
 
         viewer.launch(self.env, policy=policy)

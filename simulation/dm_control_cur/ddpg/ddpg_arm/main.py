@@ -1,14 +1,14 @@
-from ddpg_classes.simulator_arm import SimulationArm
+from simulation.dm_control_cur.ddpg.ddpg_classes.simulator_arm import SimulationArm
 import simulation.dm_control_cur.virtual_arm_environment.environments as env
 
 sa = SimulationArm(
-    load_model=True,
+    load_model=False,
     plot=True,
     name_model='passive_hand',
     task='lift_sparse',
     label=None,  # tag that is appended to file name for models and graphs
     num_episodes=1000,  # number of simulation rounds before training session
-    batch_size=128,  # number of past simulations to use for training
+    batch_size=128,  # number of past simulations to use for training                       
     duration=200,  # duration of simulation
 
     env=env,  # used if we inject an environment

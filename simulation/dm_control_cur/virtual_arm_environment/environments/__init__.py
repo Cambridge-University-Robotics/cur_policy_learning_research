@@ -1,4 +1,6 @@
 from . import passive_hand
+#add humanoid to test the _DOMAINS below
+from dm_control.suite import humanoid
 import inspect
 import collections
 
