@@ -121,6 +121,8 @@ class PhysicalEnv(Environment):
         self._reset_next_step = False
         self._step_count = 0
 
+        self.arm.commands_print('CARTESIAN', f'1000 {FIXED_Y_PLANE} 3000 MOVETO')
+
         observation = self.get_observation()
         # if self._flat_observation:
         #     observation = flatten_observation(observation)
