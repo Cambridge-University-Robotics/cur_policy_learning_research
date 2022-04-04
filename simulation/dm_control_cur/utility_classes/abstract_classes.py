@@ -9,6 +9,7 @@ class Environment(ABC):
     """
 
     @abstractmethod
+    @staticmethod
     def load(self, name_model, task, task_kwargs):
         pass
 
