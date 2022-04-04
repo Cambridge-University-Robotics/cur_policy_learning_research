@@ -1,7 +1,7 @@
 from simulation.dm_control_cur.utility_classes.simulator import Simulation
 from simulation.dm_control_cur.utility_classes.parameterizer import Parameterizer
 import numpy as np
-from simulation.dm_control_cur.physical_arm_environment.environments.physical_arm_env import PhysicalEnv
+from simulation.dm_control_cur.physical_arm_environment.environments.physical_env import PhysicalEnv
 
 
 class SimulationPhysicalArm(Simulation, Parameterizer):

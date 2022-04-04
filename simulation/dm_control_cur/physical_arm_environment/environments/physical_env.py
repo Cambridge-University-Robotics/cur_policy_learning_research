@@ -12,14 +12,15 @@ from simulation.dm_control_cur.utility_classes.abstract_classes import Environme
 # positive x is right as seen by the robot
 # positive y is in front of the robot
 # positive z is vertically upward
-OBJECT_INITIAL_HEIGHT = 0.46163282  # for the reward function
+# All units are in mm
+OBJECT_INITIAL_HEIGHT = 315  # for the reward function
 OBJECT_X_POSITION = 0
-OBJECT_Y_POSITION = 100
-FIXED_Y_PLANE = 100  # Robotic arm is confined to move in this Y plane
-OUTER_BOUNDING_BOX_X_RANGE = (-5000,5000)  # Control the size of Y plane
-OUTER_BOUNDING_BOX_Z_RANGE = (0,5000)  # Control the size of Y plane
-PROHIBITED_X_RANGE = (-10,10)  # Occupied by object holder
-PROHIBITED_Z_RANGE = (10,20)  # Occupied by object holder
+OBJECT_Y_POSITION = 500
+FIXED_Y_PLANE = 800  # Robotic arm is confined to move in this Y plane
+OUTER_BOUNDING_BOX_X_RANGE = (-400,400)  # Control the size of Y plane
+OUTER_BOUNDING_BOX_Z_RANGE = (300,800)  # Control the size of Y plane
+PROHIBITED_X_RANGE = (-80,80)  # Occupied by object holder
+PROHIBITED_Z_RANGE = (300,450)  # Occupied by object holder
 
 
 class PhysicalEnv(Environment):
@@ -80,6 +81,7 @@ class PhysicalEnv(Environment):
         # TODO: Choose a suitable initial x and z positions
         # Move robotic arm to the fixed y plane at the start
         self.arm.commands_print('CARTESIAN', f'1000 {FIXED_Y_PLANE} 3000 MOVETO')
+        print("Successfully initialised PhysicalEnv class")
 
     # IMPORTANT NOTE: load() is used to instantiate PhysicalEnv in simulator.py
     def load(self, name_model, task, task_kwargs):
@@ -121,6 +123,7 @@ class PhysicalEnv(Environment):
         self._reset_next_step = False
         self._step_count = 0
 
+        # Go to initialised position
         self.arm.commands_print('CARTESIAN', f'1000 {FIXED_Y_PLANE} 3000 MOVETO')
 
         observation = self.get_observation()
@@ -162,8 +165,7 @@ class PhysicalEnv(Environment):
             # Correct any invalid action
             action = self.correcting_action(self.get_observation(), action)
             # NOTE: set_state moves RELATIVE to previous position
-            # as action[0]=1 represents 0.1mm, it is multiplied by 10 to get 1mm
-            self.arm.set_state(action[0]*10, 0, action[1]*10, 0, 0)
+            self.arm.set_state(action[0], 0, action[1], 0, 0)
 
         # no need
         # self._task.after_step(self._physics)
@@ -172,7 +174,7 @@ class PhysicalEnv(Environment):
 
         # Reward function similar to the one in passive_hand.py
         # Consider euclidean distance and object height
-        dist = np.sum((np.array(observation["grip_pos"]) - np.array(observation["object_pos"])) ** 2) ** (1 / 2)
+        dist = np.sum((np.array(observation["grip_pos"], dtype=np.float) - np.array(observation["object_pos"], dtype=np.float)) ** 2) ** (1 / 2)
         height = observation["object_pos"][2] - OBJECT_INITIAL_HEIGHT
         height *= 50
         reward = (-dist) + height
@@ -206,9 +208,10 @@ class PhysicalEnv(Environment):
             an OrderedDict of NumPy arrays matching the specification returned by observation_spec()
         """
         obs = collections.OrderedDict()
+        arm_readings = self.arm.get_state()
 
-        grip_pos = [self.arm.get_state()["x"], self.arm.get_state()["y"], self.arm.get_state()["z"]]
-        grip_rot = [self.arm.get_state()["pitch"], self.arm.get_state()["roll"]]
+        grip_pos = [arm_readings["x"], arm_readings["y"], arm_readings["z"]]
+        grip_rot = [arm_readings["pitch"], arm_readings["roll"]]
         # x, y position of object is important to find euclidean distance of arm and object in reward
         object_pos = [OBJECT_X_POSITION, OBJECT_Y_POSITION, self.object.get_state()["height"]]
         obs['grip_pos'] = grip_pos
@@ -227,22 +230,40 @@ class PhysicalEnv(Environment):
         Returns:
             action (corrected)
         """
-        corrected_action = action.copy()
+        corrected_action = action
 
-        new_x = observation["grip_pos"][0] + action[0]
+        new_x = float(observation["grip_pos"][0]) + float(action[0])
         # Check x: outer boundary
         if new_x < OUTER_BOUNDING_BOX_X_RANGE[0] or new_x > OUTER_BOUNDING_BOX_X_RANGE[1]:
             corrected_action[0] = 0
         # Check x: prohibited area (object holder)
-        elif new_x > PROHIBITED_X_RANGE[0] or new_x < PROHIBITED_X_RANGE[1]:
+        elif new_x > PROHIBITED_X_RANGE[0] and new_x < PROHIBITED_X_RANGE[1]:
             corrected_action[0] = 0
 
-        new_z = observation["grip_pos"][2] + action[1]
+        new_z = float(observation["grip_pos"][2]) + float(action[1])
         # Check z: outer boundary (action[1] gives z relative movement, not action[2])
         if new_z < OUTER_BOUNDING_BOX_Z_RANGE[0] or new_z > OUTER_BOUNDING_BOX_Z_RANGE[1]:
             corrected_action[1] = 0
         # Check z: prohibited area (object holder)
-        elif new_z > PROHIBITED_Z_RANGE[0] or new_z < PROHIBITED_Z_RANGE[1]:
+        elif new_z > PROHIBITED_Z_RANGE[0] and new_z < PROHIBITED_Z_RANGE[1]:
             corrected_action[1] = 0
 
         return corrected_action
+
+    def terminal(self) -> None:  # command line interface
+        while True:
+            command = input('Write a command or DONE')
+            if command == 'DONE':
+                break
+            elif command == 'DEFAULT':
+                self.reset()
+            elif command == 'GETSTATE':
+                print(self.arm.get_state())
+            elif command == 'r':
+                self.arm.command_print('JOINT')
+                self.arm.command_print('TELL WRIST 18000 MOVE')
+            elif command.startswith('SETSTATE'):
+                matches = self.arm.pattern_setstate.match(command)
+                self.arm.set_state(*map(int, matches.group(*range(1, 6))))
+            else:
+                self.arm.command_print(command)

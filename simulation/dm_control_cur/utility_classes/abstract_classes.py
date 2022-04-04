@@ -8,8 +8,8 @@ class Environment(ABC):
     The suite doesn't inherit from this class.
     """
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def load(self, name_model, task, task_kwargs):
         pass
 
