@@ -2,6 +2,7 @@ import numpy as np
 import collections
 import dm_env
 from dm_env import specs, TimeStep
+from time import sleep
 
 from simulation.dm_control_cur.physical_arm_environment.utils.arm import FireflyArm
 from simulation.dm_control_cur.physical_arm_environment.utils.object import Object
@@ -16,11 +17,14 @@ from simulation.dm_control_cur.utility_classes.abstract_classes import Environme
 OBJECT_INITIAL_HEIGHT = 315  # for the reward function
 OBJECT_X_POSITION = 0
 OBJECT_Y_POSITION = 500
-FIXED_Y_PLANE = 800  # Robotic arm is confined to move in this Y plane
-OUTER_BOUNDING_BOX_X_RANGE = (-400,400)  # Control the size of Y plane
-OUTER_BOUNDING_BOX_Z_RANGE = (300,800)  # Control the size of Y plane
-PROHIBITED_X_RANGE = (-80,80)  # Occupied by object holder
-PROHIBITED_Z_RANGE = (300,450)  # Occupied by object holder
+FIXED_X_PLANE = 800
+FIXED_Y_PLANE = 800
+FIXED_Z_PLANE = 800
+OUTER_BOUNDING_BOX_X_RANGE = (-400, 400)  # Control the size of Y plane
+OUTER_BOUNDING_BOX_Z_RANGE = (-20, 70)  # Control the size of Y plane
+PROHIBITED_X_RANGE = (-10, 10)  # Occupied by object holder
+PROHIBITED_Z_RANGE = (300, 310)  # Occupied by object holder
+MAX_STEP_RANGE = 1
 
 
 class PhysicalEnv(Environment):
@@ -35,7 +39,7 @@ class PhysicalEnv(Environment):
         To instantiate this class, use PhysicalEnv.load(...)
         Args:
           physics: Instance of `Physics`.
-          task: Instance of `Task`.
+          task: Instance of `Task`, namely "1D", "2D", "3D" in string
           time_limit: Optional `int`, maximum time for each episode in seconds. By
             default this is set to infinite.
           control_timestep: Optional control time-step, in seconds.
@@ -49,19 +53,19 @@ class PhysicalEnv(Environment):
         """
 
         # Important note: task and physics are used for virtual env
-        self._task = task
-        self._physics = physics
-        self._flat_observation = flat_observation
+        self._task = task  # The degree of freedom of the arm, 1D, 2D or 3D
+        # self._physics = physics
+        # self._flat_observation = flat_observation
 
-        if n_sub_steps is not None and control_timestep is not None:
-            raise ValueError('Both n_sub_steps and control_timestep were supplied.')
-        elif n_sub_steps is not None:
-            self._n_sub_steps = n_sub_steps
+        # if n_sub_steps is not None and control_timestep is not None:
+        #     raise ValueError('Both n_sub_steps and control_timestep were supplied.')
+        # elif n_sub_steps is not None:
+        #     self._n_sub_steps = n_sub_steps
         # elif control_timestep is not None:
         #     self._n_sub_steps = compute_n_steps(control_timestep,
         #                                   self._physics.timestep())
-        else:
-            self._n_sub_steps = 1
+        # else:
+        self._n_sub_steps = 1
 
         if time_limit == float('inf'):
             self._step_limit = float('inf')
@@ -78,19 +82,31 @@ class PhysicalEnv(Environment):
         self.arm.calibrate()
         self.object.connect()
 
-        # TODO: Choose a suitable initial x and z positions
-        # Move robotic arm to the fixed y plane at the start
-        self.arm.commands_print('CARTESIAN', f'1000 {FIXED_Y_PLANE} 3000 MOVETO')
+        # Move robotic arm to an initial position
+        self.arm.commands_print('CARTESIAN', f'1000 800 3000 -45 0 MOVETO')
         print("Successfully initialised PhysicalEnv class")
 
     # IMPORTANT NOTE: load() is used to instantiate PhysicalEnv in simulator.py
-    def load(self, name_model, task, task_kwargs):
-        return PhysicalEnv(None,None)
+    @staticmethod
+    def load(name_model, task: str, task_kwargs):
+        """
+        :param name_model: will not be used, implemented to comply with dm_control env.load()
+        :param task: the degree of freedom of the robotic arm ("1D", "2D" or "3D")
+        :param task_kwargs: will not be used
+        :return: None
+        """
+        if task != "1D" and task != "2D" and task != "3D":
+            raise ValueError("Wrong task name is provided")
+        return PhysicalEnv(None, task)
 
     def action_spec(self):
         """Returns a `BoundedArraySpec` matching the `physics` actuators."""
-        # NOTE: BoundedArray of length 2, indicate X and Z relative movement
-        return specs.BoundedArray(shape=(2,), dtype=np.int, minimum=-1., maximum=1.)
+        if self._task == "1D":
+            return specs.BoundedArray(shape=(1,), dtype=np.float, minimum=-1., maximum=1.)
+        elif self._task == "2D":
+            return specs.BoundedArray(shape=(2,), dtype=np.float, minimum=-1., maximum=1.)
+        elif self._task == "3D":
+            return specs.BoundedArray(shape=(3,), dtype=np.float, minimum=-1., maximum=1.)
 
     def observation_spec(self):
         """
@@ -102,9 +118,9 @@ class PhysicalEnv(Environment):
             of each corresponding observation.
         """
         obs = collections.OrderedDict()
-        obs['grip_pos'] = specs.Array((3,),dtype=np.int)  # x,y,z
-        obs['grip_rot'] = specs.Array((2,),dtype=np.int)  # pitch, roll, NO yaw
-        obs['object_pos'] = specs.Array((1,),dtype=np.int)  # height of object
+        obs['grip_pos'] = specs.Array((3,), dtype=np.float)  # x,y,z
+        obs['grip_rot'] = specs.Array((2,), dtype=np.float)  # pitch, roll, NO yaw
+        obs['object_pos'] = specs.Array((1,), dtype=np.float)  # height of object
         return obs
 
     def reset(self) -> TimeStep:
@@ -123,8 +139,10 @@ class PhysicalEnv(Environment):
         self._reset_next_step = False
         self._step_count = 0
 
-        # Go to initialised position
-        self.arm.commands_print('CARTESIAN', f'1000 {FIXED_Y_PLANE} 3000 MOVETO')
+        # Move robotic arm to an initial position
+        self.arm.commands_print('CARTESIAN', f'1000 800 3000 -45 0 MOVETO')
+
+        input('Press a key when the object is placed in the right position')
 
         observation = self.get_observation()
         # if self._flat_observation:
@@ -165,21 +183,38 @@ class PhysicalEnv(Environment):
             # Correct any invalid action
             action = self.correcting_action(self.get_observation(), action)
             # NOTE: set_state moves RELATIVE to previous position
-            self.arm.set_state(action[0], 0, action[1], 0, 0)
+            if self._task == "1D":
+                z_mov = round(action[0] * MAX_STEP_RANGE, 1)
+                if abs(z_mov - 0) < 0.01:
+                    print("Not moving for this step")
+                else:
+                    self.arm.set_state(0, 0, z_mov, 0, 0)
+            elif self._task == "2D":
+                x_mov = round(action[0]*MAX_STEP_RANGE, 1)
+                z_mov = round(action[1]*MAX_STEP_RANGE, 1)
+                if abs(x_mov - 0) < 0.01 and abs(z_mov - 0) < 0.01:
+                    print("Not moving for this action")
+                else:
+                    self.arm.set_state(x_mov, 0, z_mov, 0, 0)
+            elif self._task == "3D":
+                x_mov = round(action[0] * MAX_STEP_RANGE, 1)
+                y_mov = round(action[1] * MAX_STEP_RANGE, 1)
+                z_mov = round(action[2] * MAX_STEP_RANGE, 1)
+                if abs(x_mov-0) < 0.01 and abs(y_mov-0) < 0.01 and abs(z_mov-0) < 0.01:
+                    print("Not moving for this action")
+                else:
+                    self.arm.set_state(x_mov, y_mov, z_mov, 0, 0)
+            sleep(0.5)
 
-        # no need
         # self._task.after_step(self._physics)
 
         observation = self.get_observation()
+        print(f"x={observation['grip_pos'][0]}, y={observation['grip_pos'][1]}, z={observation['grip_pos'][2]}")
 
-        # Reward function similar to the one in passive_hand.py
-        # Consider euclidean distance and object height
-        dist = np.sum((np.array(observation["grip_pos"], dtype=np.float) - np.array(observation["object_pos"], dtype=np.float)) ** 2) ** (1 / 2)
-        height = observation["object_pos"][2] - OBJECT_INITIAL_HEIGHT
-        height *= 50
-        reward = (-dist) + height
+        # Reward function depends on object height alone (so far)
+        reward = observation["object_pos"][0]
+        print(f"Reward value is {reward}")
 
-        # no need
         # if self._flat_observation:
         #     observation = flatten_observation(observation)
 
@@ -210,10 +245,10 @@ class PhysicalEnv(Environment):
         obs = collections.OrderedDict()
         arm_readings = self.arm.get_state()
 
-        grip_pos = [arm_readings["x"], arm_readings["y"], arm_readings["z"]]
-        grip_rot = [arm_readings["pitch"], arm_readings["roll"]]
+        grip_pos = [float(arm_readings["x"]), float(arm_readings["y"]), float(arm_readings["z"])]
+        grip_rot = [float(arm_readings["pitch"]), float(arm_readings["roll"])]
         # x, y position of object is important to find euclidean distance of arm and object in reward
-        object_pos = [OBJECT_X_POSITION, OBJECT_Y_POSITION, self.object.get_state()["height"]]
+        object_pos = [self.object.get_state()["height"]]
         obs['grip_pos'] = grip_pos
         obs['grip_rot'] = grip_rot
         obs['object_pos'] = object_pos
@@ -223,30 +258,42 @@ class PhysicalEnv(Environment):
         """
         This function will correct action if
             (1) the action will cause the final position to be outside the allowable outer boundary
-            (2) the action will cause the final position to fall with prohibited area (object holder)
+            (2) the action will cause the final position to fall within prohibited area (object holder)
         Args:
             observation
             action
         Returns:
             action (corrected)
         """
+        # TODO: Worry about the collision detection later
         corrected_action = action
 
-        new_x = float(observation["grip_pos"][0]) + float(action[0])
-        # Check x: outer boundary
-        if new_x < OUTER_BOUNDING_BOX_X_RANGE[0] or new_x > OUTER_BOUNDING_BOX_X_RANGE[1]:
-            corrected_action[0] = 0
-        # Check x: prohibited area (object holder)
-        elif new_x > PROHIBITED_X_RANGE[0] and new_x < PROHIBITED_X_RANGE[1]:
-            corrected_action[0] = 0
+        if self._task == "1D":
+            new_z = float(observation["grip_pos"][2]) + float(action[0] * MAX_STEP_RANGE)
+            # Check z: outer boundary (action[1] gives z relative movement, not action[2])
+            if new_z < OUTER_BOUNDING_BOX_Z_RANGE[0] or new_z > OUTER_BOUNDING_BOX_Z_RANGE[1]:
+                corrected_action[0] = 0
 
-        new_z = float(observation["grip_pos"][2]) + float(action[1])
-        # Check z: outer boundary (action[1] gives z relative movement, not action[2])
-        if new_z < OUTER_BOUNDING_BOX_Z_RANGE[0] or new_z > OUTER_BOUNDING_BOX_Z_RANGE[1]:
-            corrected_action[1] = 0
-        # Check z: prohibited area (object holder)
-        elif new_z > PROHIBITED_Z_RANGE[0] and new_z < PROHIBITED_Z_RANGE[1]:
-            corrected_action[1] = 0
+        elif self._task == "2D":
+            new_x = float(observation["grip_pos"][0]) + float(action[0]*MAX_STEP_RANGE)
+            # Check x: outer boundary
+            if new_x < OUTER_BOUNDING_BOX_X_RANGE[0] or new_x > OUTER_BOUNDING_BOX_X_RANGE[1]:
+                corrected_action[0] = 0
+            # Check x: prohibited area (object holder)
+            elif new_x > PROHIBITED_X_RANGE[0] and new_x < PROHIBITED_X_RANGE[1]:
+                corrected_action[0] = 0
+
+            new_z = float(observation["grip_pos"][2]) + float(action[1]*MAX_STEP_RANGE)
+            # Check z: outer boundary (action[1] gives z relative movement, not action[2])
+            if new_z < OUTER_BOUNDING_BOX_Z_RANGE[0] or new_z > OUTER_BOUNDING_BOX_Z_RANGE[1]:
+                corrected_action[1] = 0
+            # Check z: prohibited area (object holder)
+            elif new_z > PROHIBITED_Z_RANGE[0] and new_z < PROHIBITED_Z_RANGE[1]:
+                corrected_action[1] = 0
+
+        if self._task == "3D":
+            # TODO: collision detection for 3D movement
+            pass
 
         return corrected_action
 

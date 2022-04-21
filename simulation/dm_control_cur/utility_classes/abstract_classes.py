@@ -10,7 +10,7 @@ class Environment(ABC):
 
     @staticmethod
     @abstractmethod
-    def load(self, name_model, task, task_kwargs):
+    def load(name_model, task, task_kwargs):
         pass
 
     @abstractmethod

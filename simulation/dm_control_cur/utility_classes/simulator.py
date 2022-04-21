@@ -112,6 +112,7 @@ class Simulation(AbstractSimulation):
 
             for t in range(self.DURATION):
                 action = self.agent.get_action(state, t=t)
+                print(f'my action is: {action}-------------------')
                 action_modified = self.modify_action(action, state, t)
                 try:
                     time_step_2 = self.env.step(action_modified)

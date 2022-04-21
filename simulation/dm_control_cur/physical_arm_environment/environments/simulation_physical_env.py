@@ -24,15 +24,16 @@ class SimulationPhysicalArm(Simulation, Parameterizer):
 
 
 sa = SimulationPhysicalArm(
-    load_model=True,
+    load_model=False,
     plot=False,
+    task='1D',
     label=None,  # tag that is appended to file name for models and graphs
-    num_episodes=1000,  # number of simulation rounds before training session
-    batch_size=128,  # number of past simulations to use for training                       
-    duration=200,  # duration of simulation
+    num_episodes=10,  # number of simulation rounds before training session
+    batch_size=10,  # number of past simulations to use for training
+    duration=10,  # duration of simulation
 
     env=PhysicalEnv,  # used if we inject an environment
 )
 # PUT PHYSICAL_ENV() IN A INIT FILE LIKE WHAT VIRTUAL ARM DID, SO THAT WHEN THE SIMULATOR CALL ENV.LOAD(), IT LOADS THE PHYSICAL_ENV() INSTANCE
-# sa.train()
-sa.show_simulation()
+sa.train()
+# sa.show_simulation()
