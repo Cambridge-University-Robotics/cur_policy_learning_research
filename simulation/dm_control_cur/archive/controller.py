@@ -147,16 +147,16 @@ class RobotDeltaController(RobotController):
         super()
         self.last_target_state = None
 
-    def get_action(self, readings: utility.SensorsReading):
+    def get_action(self, readings: data_wrappers.SensorsReading):
         current_state = np.concatenate([readings.grip_pos, readings.grip_rot[1], readings.grip_rot[0]], axis=None)
         target_state = self.get_target_state(readings.simulation_time, current_state)
 
         if target_state is None:
-            return utility.to_action(np.zeros(3), readings.grip_rot[2], readings.grip_rot[0])
+            return data_wrappers.to_action(np.zeros(3), readings.grip_rot[2], readings.grip_rot[0])
         if self.last_target_state is None:
-            action = utility.to_action(target_state[:3] - readings.grip_pos, target_state[3], target_state[4])
+            action = data_wrappers.to_action(target_state[:3] - readings.grip_pos, target_state[3], target_state[4])
         else:
             diff = target_state - self.last_target_state
-            action = utility.to_action(diff[:3], readings.grip_rot[2] + diff[3], readings.grip_rot[0] + diff[4])
+            action = data_wrappers.to_action(diff[:3], readings.grip_rot[2] + diff[3], readings.grip_rot[0] + diff[4])
         self.last_target_state = target_state
         return action

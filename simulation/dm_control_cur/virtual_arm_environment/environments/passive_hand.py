@@ -9,6 +9,24 @@ from simulation.dm_control_cur.virtual_arm_environment.environments import base
 from simulation.dm_control_cur.virtual_arm_environment.utils import rotations
 from dm_env import specs
 
+def fix_xml(
+        path_to_xml: str = r'..\virtual_arm_environment\environments\assets\passive_hand\lift.xml'):
+    with open(path_to_xml, 'r') as f:
+        content = f.read()
+
+    compiler_options_str = content.split('<compiler')[1].split('/>')[0]
+    comp_opt_position = content.find('<compiler')
+    rel_end_of_comp_opt_position = content.split('<compiler')[1].find('/>')
+    option = ' autolimits="true"'
+    if compiler_options_str.find(option) < 0:
+        compiler_options_str += option
+        compiler_options_str += '/>'
+        new_content = content[:comp_opt_position+len('<compiler')] + compiler_options_str + content[comp_opt_position + len('<compiler') + rel_end_of_comp_opt_position + 2:]
+
+        with open(path_to_xml, 'w') as f:
+            f.write(new_content)
+
+
 _DEFAULT_TIME_LIMIT = 15
 MODEL_XML_PATH = os.path.join('passive_hand', 'lift.xml')
 _N_SUBSTEPS = 20
@@ -30,6 +48,7 @@ def _load_physics(model_path):
 
 @SUITE.add()
 def lift_sparse(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+    fix_xml()
     physics = _load_physics(MODEL_XML_PATH)
     task = Lift(sparse=True, random=random)
     environment_kwargs = environment_kwargs or {}
@@ -99,7 +118,7 @@ class Lift(control.Task):
     def _physics_setup(self, physics, initial_qpos):
         for name, value in initial_qpos.items():
             physics.named.data.qpos[name] = value
-        mocap_utils.reset_mocap_welds(physics)
+        # mocap_utils.reset_mocap_welds(physics)
         physics.forward()
 
         # Move end effector into position.

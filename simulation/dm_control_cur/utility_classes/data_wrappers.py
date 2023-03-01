@@ -5,13 +5,13 @@ import numpy as np
 # Wrapper classes
 class EnvironmentParametrization():
     DEFAULT = {
-        '_object_translate': 0.0,
-        '_object_change_slope': 0.0,
-        '_robot_change_finger_length': 0.0,
-        '_robot_change_joint_stiffness': 0.0,
-        '_robot_change_finger_spring_default': 0.0,
-        '_robot_change_thumb_spring_default': 0.0,
-        '_robot_change_friction': 0.0
+        'object_translate': 0.0,
+        'object_change_slope': 0.0,
+        'robot_change_finger_length': 0.0,
+        'robot_change_joint_stiffness': 0.0,
+        'robot_change_finger_spring_default': 0.0,
+        'robot_change_thumb_spring_default': 0.0,
+        'robot_change_friction': 0.0
     }
 
     def __init__(self,
@@ -25,11 +25,11 @@ class EnvironmentParametrization():
         self.robot_change_thumb_spring_default = None
         self.robot_change_friction = None
 
-        for key in dir(self):
-            if key in parameters:
-                setattr(self, key, parameters[key])
-            else:
-                setattr(self, key, EnvironmentParametrization.DEFAULT[key])
+        # for key in dir(self):
+        #     if key in parameters:
+        #         setattr(self, key, parameters[key])
+        #     else:
+        #         setattr(self, key, EnvironmentParametrization.DEFAULT[key])
 
     def __dir__(self):
         return ('object_translate', 'object_change_slope', 'robot_change_finger_length', 'robot_change_joint_stiffness',

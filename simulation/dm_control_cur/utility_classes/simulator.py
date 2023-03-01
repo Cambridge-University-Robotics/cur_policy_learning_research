@@ -178,4 +178,18 @@ class Simulation(AbstractSimulation):
             action_modified = self.modify_action(action, state, t)
             return action_modified
 
+            # return np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+
         viewer.launch(self.env, policy=policy)
+
+    @staticmethod
+    def show_learning_curve(rewards):
+        plt.plot(rewards)
+        plt.show()
+
+    def debug_plot_frame(self):
+        plt.imshow(self.env.physics.render(480, 640))
+
+    def debug_randomize_all_joints(self):
+        for key in self.env.physics.named.data.qpos.axes.row.names:
+            self.env.physics.named.data.qpos[key] = 10*np.random.rand(1)

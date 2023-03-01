@@ -45,7 +45,8 @@ class SimulationAPI:
                 pm._randomize_object(self.object_randomization_multiplier)
                 pm._randomize_robot(self.hand_randomization_multiplier)
             if parameters is not None:
-                pm._set_all(parameters.to_dict())
+                pass
+                # pm._set_all(parameters.to_dict())
             pm._export_xml()
         para_dict = pm.get_parameters()
         self.environmental_parametrization = EnvironmentParametrization(para_dict)
